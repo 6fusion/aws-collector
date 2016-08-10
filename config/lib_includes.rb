@@ -1,0 +1,1 @@
+Dir.glob(File.join('..', 'lib', '**', '*.rb'), &method(:require))
