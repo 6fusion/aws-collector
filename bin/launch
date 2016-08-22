@@ -1,6 +1,9 @@
 #!/usr/bin/env ruby
 
 require 'bundler/setup'
-require '../config/lib_includes.rb'
+
+root_dir = File.expand_path('../..', __FILE__)
+
+Dir.glob(File.join(root_dir, 'lib', '**', '*.rb'), &method(:require))
 
 DummyWaitingProcess.new.run
