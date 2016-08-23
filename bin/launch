@@ -1,9 +1,12 @@
 #!/usr/bin/env ruby
 
 require 'bundler/setup'
+require 'yaml'
+require 'hash_dot'
 
 root_dir = File.expand_path('../..', __FILE__)
-
 Dir.glob(File.join(root_dir, 'lib', '**', '*.rb'), &method(:require))
+
+CONFIG = YAML::load_file(File.expand_path('../../config/application.yml', __FILE__)).to_dot
 
 DummyWaitingProcess.new.run
