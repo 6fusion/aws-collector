@@ -6,3 +6,6 @@
 !/tmp/.keep
 
 /.idea/*
+*.iml
+
+/.ssl/*
