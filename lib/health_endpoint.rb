@@ -6,6 +6,8 @@ require 'forwardable'
 class HealthEndpoint
   extend Forwardable
 
+  def_delegators :@server, :start, :shutdown
+
   def initialize
     cert, pkey = ssl_certificate_and_key
 
@@ -19,7 +21,9 @@ class HealthEndpoint
     end
   end
 
-  def_delegators :@server, :start, :shutdown
+  def start_async
+    Thread.new { @server.start }
+  end
 
   private
 
