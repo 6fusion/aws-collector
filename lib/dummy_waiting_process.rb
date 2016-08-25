@@ -5,15 +5,12 @@ class DummyWaitingProcess
     health_endpoint = HealthEndpoint.new
 
     begin
-      health_endpoint.start
       puts 'Waiting for Ctrl-C'
-      sleep
+      health_endpoint.start
     rescue Interrupt
       puts 'Got Ctrl-C, exit'
-      exit
     ensure
       health_endpoint.shutdown
     end
   end
-
 end
