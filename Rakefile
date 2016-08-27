@@ -1,8 +1,9 @@
-require 'bundler/setup'
-require 'yaml'
-require 'hash_dot'
+require 'bundler'
+Bundler.require(:default)
 
-Dir.glob(File.join('.', 'lib', '**', '*.rb'), &method(:require))
+$:.unshift File.expand_path('lib/collectors/modules')
+
+Dir.glob(File.join('./lib/**/*.rb'), &method(:require))
 
 CONFIG = YAML::load_file(File.expand_path('../config/application.yml', __FILE__)).to_dot
 

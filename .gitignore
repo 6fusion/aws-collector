@@ -9,3 +9,5 @@
 *.iml
 
 /.ssl/*
+
+.DS_Store

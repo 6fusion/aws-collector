@@ -10,3 +10,7 @@ scheduler:
     rake_command: demo
     interval: 10s
     first_in: 10s
+
+collectors:
+  metric:
+    period: 60
