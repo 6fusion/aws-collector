@@ -1,2 +1,12 @@
 server:
   port: 8000
+
+scheduler:
+  demo:
+    rake_command: demo
+    interval: 5s
+    first_in: 0 # Immediately
+  demo2:
+    rake_command: demo
+    interval: 10s
+    first_in: 10s

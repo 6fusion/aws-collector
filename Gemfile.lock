@@ -24,6 +24,7 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.5.0)
     rspec-support (3.5.0)
+    rufus-scheduler (3.2.2)
 
 PLATFORMS
   ruby
@@ -33,6 +34,7 @@ DEPENDENCIES
   hash_dot
   rake
   rspec
+  rufus-scheduler
 
 BUNDLED WITH
    1.12.5
