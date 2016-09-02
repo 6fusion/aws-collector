@@ -11,40 +11,52 @@ RSpec.describe MetricCollector do
     let (:data_point) { double(average: 1, timestamp: Time.new) }
     let (:statistics) { double(datapoints: [data_point]) }
 
-
-    context 'with metric name = CPUUtilization' do
-      let (:metric_name) { 'CPUUtilization' }
+    context 'with metric name = cpu_usage_percent' do
+      let (:aws_metric_name) { 'CPUUtilization' }
 
       it 'processes and stores CPUUtilization metric in mongo' do
         expect(cw_client).to receive(:get_metric_statistics).
-            with(hash_including(metric_name: metric_name)).
+            with(hash_including(metric_name: aws_metric_name)).
             and_return(statistics)
 
-        subject.process_ec2_metric(metric_name, {})
+        subject.process('cpu_usage_percent', {})
 
-        stored_instance = EC2Instance.find_by(id: instance.instance_id)
-        stored_metrics = stored_instance.metrics
-        expect(stored_metrics.size).to eq(1)
+        stored_metrics = Metric.find_by(device_id: instance.instance_id)
+        expect(stored_metrics).to be_truthy
 
-        stored_data_point = stored_metrics.first.metric_data_points.first
+        stored_data_point = stored_metrics.metric_data_points.first
         expect(stored_data_point.value).to eq(data_point.average)
         expect(stored_data_point.timestamp.to_s).to eq(data_point.timestamp.to_s)
       end
     end
 
-    context 'with metric name = DiskWriteBytes and instance root device type = ebs' do
-      let (:metric_name) { 'DiskWriteBytes' }
+    context 'with metric name = write_bytes_per_second and instance root device type = ebs' do
+      let (:aws_metric_name) { 'VolumeWriteBytes' }
+      let (:volume_id) { '_volume_id_1'}
 
       before(:each) do
         allow(instance).to receive(:root_device_type).and_return('ebs')
+        allow(instance).to receive(:block_device_mappings).and_return(
+            [
+                double(ebs: double(volume_id: volume_id))
+            ])
       end
 
-      it 'doesn\'t process and store the metric in mongo' do
-        expect(cw_client).to receive(:get_metric_statistics).never
+      it 'receives metrics from EBS and not from EC2' do
+        expect(cw_client).to receive(:get_metric_statistics).
+            with(hash_including(namespace: 'AWS/EC2')).never
+        expect(cw_client).to receive(:get_metric_statistics).
+            with(hash_including(namespace: 'AWS/EBS', metric_name: aws_metric_name)).
+            and_return(statistics)
 
-        subject.process_ec2_metric(metric_name, {})
+        subject.process('write_bytes_per_second', {})
 
-        expect(EC2Instance.where(id: instance.instance_id).present?).to be_falsey
+        stored_metrics = Metric.find_by(device_id: volume_id)
+        expect(stored_metrics).to be_truthy
+
+        stored_data_point = stored_metrics.metric_data_points.first
+        expect(stored_data_point.value).to eq(data_point.average)
+        expect(stored_data_point.timestamp.to_s).to eq(data_point.timestamp.to_s)
       end
     end
   end

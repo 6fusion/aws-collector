@@ -4,5 +4,7 @@ class MetricDataPoint
   field :value, type: Float
   field :timestamp, type: Time
 
-  embedded_in :metric
+  validates_presence_of :value, :timestamp
+
+  belongs_to :metric
 end
