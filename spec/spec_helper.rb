@@ -103,5 +103,4 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 =end
-  CONFIG = YAML::load_file(File.expand_path('../../config/application.yml', __FILE__)).to_dot
 end
