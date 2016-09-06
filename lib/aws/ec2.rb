@@ -1,11 +1,11 @@
 module AWS
   module PriceList
     module EC2
-      def self.on_demand(options = {})
+      def self.on_demand(options)
         decode price_details("OnDemand", options)
       end
 
-      def self.reserved(options = {})
+      def self.reserved(options)
         decode price_details("Reserved", options)
       end
 
@@ -17,7 +17,7 @@ module AWS
         end
       end
 
-      def self.products(options)
+      def self.products(options = {})
         options.keys.each do |key|
           options.store("attr.#{key}", options.delete(key))
         end
