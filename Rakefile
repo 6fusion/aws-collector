@@ -1,7 +1,7 @@
 require 'bundler'
 Bundler.require(:default)
 
-$:.unshift File.expand_path('lib/collectors/modules')
+$:.unshift File.expand_path('lib/collectors/modules'), File.expand_path('lib/collectors')
 
 Dir.glob(File.join('./lib/**/*.rb'), &method(:require))
 

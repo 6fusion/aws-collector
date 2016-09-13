@@ -4,3 +4,10 @@ development:
       database: metrics
       hosts:
         - localhost:27017
+
+test:
+  clients:
+    default:
+      database: metrics-test
+      hosts:
+        - localhost:27017
