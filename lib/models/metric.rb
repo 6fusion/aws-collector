@@ -7,7 +7,8 @@ class Metric
   field :end_time, type: Time
   field :device_id, type: String
 
-  validates_presence_of :name, :namespace, :start_time, :end_time, :device_id
+  validates :name, :namespace, :start_time, :end_time, :device_id,
+            presence: true
 
   has_many :metric_data_points
 end

@@ -4,7 +4,7 @@ class MetricDataPoint
   field :value, type: Float
   field :timestamp, type: Time
 
-  validates_presence_of :value, :timestamp
+  validates :value, :timestamp, presence: true
 
   belongs_to :metric
 end
