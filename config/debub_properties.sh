@@ -1,5 +1,5 @@
-export AWS_ACCESS_KEY="AKIAI6JJ3K3A5QBCY6AA"
-export AWS_SECRET_KEY="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"
+export AWS_ACCESS_KEY=...
+export AWS_SECRET_KEY=...
 
 export ORGNANIZATION_ID="98-05-97"
 export ORGNANIZATION_NAME="Epicsoftware development group"
