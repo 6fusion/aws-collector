@@ -6,5 +6,5 @@ task :collect, [:metric_name] do |t, args|
   time_options = {start_time: 1.day.ago.iso8601,
                   end_time: Time.now.iso8601}
 
-  metric_collector.process(args[:metric_name], time_options)
+  metric_collector.process(time_options)
 end
