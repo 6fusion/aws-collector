@@ -4,7 +4,7 @@ class MetricCollector
   include AWSHelper
 
   DEFAULT_OPTIONS = {
-      period: 60,
+      period: 300,
       statistics: ['Average']
   }
   METRICS = [
@@ -35,6 +35,8 @@ class MetricCollector
   ]
 
   def process(options)
+    initialize_metric_collection(options[:start_time])
+
     common_options = merge_common_options(options)
     METRICS.each do |metric|
       process_metric(metric, common_options)
@@ -57,6 +59,11 @@ class MetricCollector
     end
   end
 
+  def initialize_metric_collection(start_time)
+    MetricsCollection.destroy_all(start_time: start_time)
+    MetricsCollection.create!(start_time: start_time)
+  end
+
   def process_ebs(metric, options, instance)
     cw_client = Clients.cloud_watch(instance.client.config.region)
     ebs_options = merge_ebs_options(metric, options)
@@ -77,7 +84,7 @@ class MetricCollector
   end
 
   def save(metric, statistics, options)
-    collection = MetricsCollection.find_or_create_by(start_time: options[:start_time])
+    collection = MetricsCollection.find_by(start_time: options[:start_time])
     collection.metric_values.push(datapoints(metric, statistics, options))
     collection.save!
   end
