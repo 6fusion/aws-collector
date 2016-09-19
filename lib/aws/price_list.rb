@@ -9,7 +9,9 @@ module AWS
 
     def self.fetch
       flush
-      response = get("/offers/v1.0/aws/index.json").to_dot
+
+      response = http_get("/offers/v1.0/aws/index.json").to_dot
+
       response.offers.each do |offer|
         persist offer_file(offer.last["offerCode"],
                            offer.last["currentVersionUrl"]).to_dot
@@ -20,7 +22,8 @@ module AWS
 
     def self.offer_file(offer_code, current_version_url)
       puts "Fetching price details for #{offer_code}"
-      get(current_version_url)
+
+      http_get(current_version_url)
     end
 
     def self.flush
@@ -56,6 +59,15 @@ module AWS
 
     def self.encode(json)
       JSON.parse(json.to_json.gsub(/\./, "%2E"))
+    end
+
+    def self.http_get(url, retry_count = 8)
+      begin
+        get(url)
+      rescue
+        retry_count-= 1
+        retry if retry_count >= 0
+      end
     end
   end
 end
