@@ -1,3 +1,7 @@
+require 'inventory_helper'
+require 'ec2_helper'
+require 'property_helper'
+
 class InventoryCollector
   include InventoryHelper
   include Ec2Helper

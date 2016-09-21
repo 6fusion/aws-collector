@@ -1,10 +1,10 @@
 class Inventory
   include Mongoid::Document
+  include Mongoid::Timestamps::Created
 
   field :organization_id, type: String
   field :name, type: String
   field :tags, type: Array, default: []
-  field :cr_date, type: DateTime, default: Time.new
 
   validates :organization_id, :name, presence: true
 
