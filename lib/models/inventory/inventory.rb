@@ -9,4 +9,6 @@ class Inventory
   validates :organization_id, :name, presence: true
 
   embeds_many :hosts
+  embeds_many :networks, class_name: "Nic"
+  embeds_many :volumes, class_name: "Disk"
 end

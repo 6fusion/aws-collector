@@ -22,5 +22,5 @@ class Host
 
   embeds_one :cpu
   embeds_many :nics
-  embeds_many :volumes
+  embeds_many :disks
 end
