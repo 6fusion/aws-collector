@@ -12,7 +12,9 @@ class InventoryCollector
     inventory = Inventory.new(
       organization_id: PropertyHelper.read_property("ORGNANIZATION_ID"),
       name: PropertyHelper.read_property("ORGNANIZATION_NAME"),
-      hosts: instances.map { |instance| host_model(instance) }
+      hosts: instances.map { |instance| host_model(instance) },
+      volumes: volumes.map { |volume| disk_model(volume) },
+      networks: vpcs.map { |vpc| nic_model(vpc) }
     )
 
     puts "Saving the inventory into DB..."
@@ -25,6 +27,9 @@ class InventoryCollector
     type = instance.instance_type
     tags = tags_to_map(instance.tags).to_dot
     hardware = INSTANCE_TYPES[type].to_dot
+
+    disks = instance.volumes.map { |volume| disk_model(volume) }
+    disks << instance_disk_model(instance) if instance_disk_model(instance)
 
     Host.new(
       custom_id: instance.instance_id,
@@ -42,23 +47,31 @@ class InventoryCollector
         cores: hardware.cores,
         speed_ghz: hardware.cpu_speed_ghz
       ),
-      nics: instance.network_interfaces.map { |network| nic_model(network) },
-      volumes: instance.volumes.map { |volume| volume_model(volume) }
+      nics: [
+        Nic.new(
+          custom_id: "united_network_of_instance_#{instance.instance_id}",
+          name: :united_network,
+          state: :available
+        )
+      ],
+      disks: disks
     )
   end
 
-  def nic_model(network)
+  def nic_model(vpc)
+    tags = tags_to_map(vpc.tags)
     Nic.new(
-      custom_id: network.id,
-      description: network.description,
-      status: network.status
+      custom_id: vpc.id,
+      name: tags["Name"],
+      state: vpc.state,
+      tags: tags
     )
   end
 
-  def volume_model(volume)
+  def disk_model(volume)
     tags = tags_to_map(volume.tags)
-    Volume.new(
-      custom_id: volume.id,
+    Disk.new(
+      custom_id: volume.volume_id,
       name: tags["Name"],
       type: volume.volume_type,
       size_gib: volume.size,
@@ -68,11 +81,40 @@ class InventoryCollector
     )
   end
 
+  def instance_disk_model(instance)
+    store = INSTANCE_STORES[instance.instance_type]&.to_dot
+    return nil unless store
+
+    Disk.new(
+      custom_id: "united_instance_store_of_instance_#{instance.instance_id}",
+      name: "United instance store",
+      type: :instance_store,
+      size_gib: store.size_gb,
+      isntance_store_type: store.type,
+      isntance_stores_count: store.quantity
+    )
+  end
+
+  def vpcs
+    regions.collect do |region|
+      aws_ec2_resource(region).vpcs.entries
+    end.compact.flatten
+  end
+
+  def volumes
+    regions.collect do |region|
+      aws_ec2_resource(region).volumes.entries
+    end.compact.flatten
+  end
+
   def instances
-    regions = aws_client_ec2.describe_regions.data.regions.map(&:region_name)
     regions.collect do |region|
       aws_ec2_resource(region).instances.entries
     end.compact.flatten
+  end
+
+  def regions
+    aws_client_ec2.describe_regions.data.regions.map(&:region_name)
   end
 
   def tags_to_map(tags)
