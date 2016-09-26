@@ -94,8 +94,8 @@ class InventoryCollector
       name: "United instance store",
       type: :instance_store,
       size_gib: store.size_gb,
-      isntance_store_type: store.type,
-      isntance_stores_count: store.quantity
+      instance_store_type: store.type,
+      instance_stores_count: store.quantity
     )
   end
 

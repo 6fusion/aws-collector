@@ -3,8 +3,6 @@ require 'aws_helper'
 class MetricCollector
   include AWSHelper
 
-  MEGABYTES_TO_BYTES = ->(value) { value.megabytes }
-
   def initialize(options)
     @options = {
         start_time: options[:start_time],
@@ -38,7 +36,7 @@ class MetricCollector
     memory_options = ec2_options('Memory', custom_id, memory_namespace)
     {
         cpu_usage: datapoints(region, cpu_options),
-        memory_bytes: datapoints(region, memory_options, &MEGABYTES_TO_BYTES)
+        memory_megabytes: datapoints(region, memory_options)
     }
   end
 
@@ -51,15 +49,13 @@ class MetricCollector
 
   def collect_disks(host)
     disk_samples = []
-    custom_id = host.custom_id
     region = host.region
 
-    if host.root_device_type == 'instance-store'
-      disk_samples.push collect_instance_stores(custom_id, region)
-    end
-
-    host.volumes.each do |volume|
-      disk_samples.push collect_ebs_volumes(volume.custom_id, region)
+    host.disks.each do |disk|
+      metrics = disk.type == 'instance_store' ?
+          collect_instance_stores(host.custom_id, region) :
+          collect_ebs_volumes(disk.custom_id, region)
+      disk_samples.push(metrics)
     end
 
     disk_samples
@@ -68,16 +64,16 @@ class MetricCollector
   def collect_ebs_volumes(custom_id, region)
     {
         id: custom_id,
-        read: datapoints(region, ebs_options('VolumeWriteBytes', custom_id)),
-        write: datapoints(region, ebs_options('VolumeReadBytes', custom_id))
+        read: datapoints(region, ebs_options('VolumeReadBytes', custom_id)),
+        write: datapoints(region, ebs_options('VolumeWriteBytes', custom_id))
     }
   end
 
   def collect_instance_stores(custom_id, region)
     {
         id: custom_id,
-        read: datapoints(region, ec2_options('DiskWriteBytes', custom_id)),
-        write: datapoints(region, ec2_options('DiskReadBytes', custom_id))
+        read: datapoints(region, ec2_options('DiskReadBytes', custom_id)),
+        write: datapoints(region, ec2_options('DiskWriteBytes', custom_id))
     }
   end
 
@@ -87,14 +83,14 @@ class MetricCollector
     disks = samples[:disks]
 
     cpu_usage = machine[:cpu_usage]
-    memory_bytes = machine[:memory_bytes]
+    memory_megabytes = machine[:memory_megabytes]
     network_in = nics[:network_in]
     network_out = nics[:network_out]
 
     @timestamps.each do |time|
       machine_sample =
           MachineSample.new(cpu_usage_percent: cpu_usage[time],
-                            memory_bytes: memory_bytes[time])
+                            memory_megabytes: memory_megabytes[time])
       nic_sample =
           NicSample.new(receive_bytes_per_second: network_in[time],
                         transmit_bytes_per_second: network_out[time])
@@ -141,9 +137,7 @@ class MetricCollector
     values = datapoints.collect do |datapoint|
       timestamp = datapoint.timestamp
       @timestamps.add(timestamp)
-      value = datapoint.average
-      value = yield(value) if block_given?
-      [timestamp, value]
+      [timestamp, datapoint.average]
     end
 
     Hash[values]
