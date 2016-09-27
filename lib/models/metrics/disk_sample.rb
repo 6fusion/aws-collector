@@ -13,4 +13,13 @@ class DiskSample
             numericality: { greater_than_or_equal_to: 0 }
 
   embedded_in :sample
+
+  def to_payload
+    {
+      id: custom_id,
+      usage_bytes: usage_bytes,
+      read_bytes_per_second: read_bytes_per_second,
+      write_bytes_per_second: write_bytes_per_second
+    }
+  end
 end
