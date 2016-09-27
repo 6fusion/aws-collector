@@ -1,6 +1,7 @@
 class NicSample
   include Mongoid::Document
 
+  field :custom_id, type: String
   field :receive_bytes_per_second, type: Integer, default: 0
   field :transmit_bytes_per_second, type: Integer, default: 0
 

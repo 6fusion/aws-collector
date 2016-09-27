@@ -35,6 +35,7 @@ class MetricCollector
     cpu_options = ec2_options('CPUUtilization', custom_id)
     memory_options = ec2_options('Memory', custom_id, memory_namespace)
     {
+        id: custom_id,
         cpu_usage: datapoints(region, cpu_options),
         memory_megabytes: datapoints(region, memory_options)
     }
@@ -42,6 +43,7 @@ class MetricCollector
 
   def collect_nics(custom_id, region)
     {
+        id: "united_network_of_instance_#{custom_id}",
         network_in: datapoints(region, ec2_options('NetworkIn', custom_id)),
         network_out: datapoints(region, ec2_options('NetworkOut', custom_id))
     }
@@ -71,7 +73,7 @@ class MetricCollector
 
   def collect_instance_stores(custom_id, region)
     {
-        id: custom_id,
+        id: "united_instance_store_of_instance_#{custom_id}",
         read: datapoints(region, ec2_options('DiskReadBytes', custom_id)),
         write: datapoints(region, ec2_options('DiskWriteBytes', custom_id))
     }
@@ -86,18 +88,21 @@ class MetricCollector
     memory_megabytes = machine[:memory_megabytes]
     network_in = nics[:network_in]
     network_out = nics[:network_out]
+    network_id = nics[:id]
 
     @timestamps.each do |time|
       machine_sample =
-          MachineSample.new(cpu_usage_percent: cpu_usage[time],
+          MachineSample.new(custom_id: machine[:id],
+                            cpu_usage_percent: cpu_usage[time],
                             memory_megabytes: memory_megabytes[time])
       nic_sample =
-          NicSample.new(receive_bytes_per_second: network_in[time],
+          NicSample.new(custom_id: network_id,
+                        receive_bytes_per_second: network_in[time],
                         transmit_bytes_per_second: network_out[time])
 
       disk_sample = disks.collect do |disk|
         DiskSample.new(
-            id: disk[:id],
+            custom_id: disk[:id],
             usage_bytes: 0, #TODO gather this metric
             read_bytes_per_second: disk[:read][time],
             write_bytes_per_second: disk[:write][time]
