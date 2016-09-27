@@ -6,7 +6,7 @@ class Sample
 
   validates :start_time, :end_time, presence: true
 
-  embeds_one :machine_sample
-  embeds_one :nic_sample
-  embeds_many :disk_samples
+  embeds_one :machine_sample, cascade_callbacks: true
+  embeds_one :nic_sample, cascade_callbacks: true
+  embeds_many :disk_samples, cascade_callbacks: true
 end
