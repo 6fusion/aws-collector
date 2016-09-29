@@ -1,8 +1,4 @@
 module PropertyHelper
-  def self.init_mongo
-    Mongoid.load!('./config/mongoid.yml', PropertyHelper.read_property("MONGOID_ENV", :development))
-  end
-
   def self.aws_access_key
     read_property("AWS_ACCESS_KEY")
   end

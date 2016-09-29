@@ -7,10 +7,6 @@ class InventoryCollector
   include Ec2Helper
   include PropertyHelper
 
-  def initialize
-    PropertyHelper.init_mongo
-  end
-
   def collect_inventory
     puts "Starting AWS inventory collector..."
     inventory = Inventory.new(
