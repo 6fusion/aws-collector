@@ -5,6 +5,9 @@ class Inventory
   field :organization_id, type: String
   field :name, type: String
   field :tags, type: Array, default: []
+  field :custom_id, type: String
+  field :synchronized, type: Boolean, default: true
+  field :last_collected_metrics_time, type: Time
 
   validates :organization_id, :name, presence: true
 

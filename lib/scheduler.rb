@@ -27,7 +27,7 @@ class Scheduler
 
   def start
     CONFIG.scheduler.map(&:last).each do |task|
-      @scheduler.interval(task.interval, first_in: task.first_in) do |job|
+      @scheduler.interval(task.interval, first_in: task.first_in, blocking: true) do |job|
         command = task.rake_command
         puts "Launching rake task [#{command}]. Job id [#{job.id}]"
         puts %x[rake #{command}]

@@ -15,6 +15,8 @@ class Host
   field :network, type: String
   field :platform, type: String
 
+  field :last_sent_metrics_time, type: Time
+
   validates :custom_id, :name, :type, :region, :state, :monitoring, :network, presence: true
   validates :memory_gb,
             presence: true,
@@ -23,4 +25,12 @@ class Host
   embeds_one :cpu
   embeds_many :nics
   embeds_many :disks
+  embedded_in :inventory
+
+  def to_payload
+    #TODO merge 'sending inventory' code here
+    {
+        last_sent_metrics_time: last_sent_metrics_time
+    }
+  end
 end

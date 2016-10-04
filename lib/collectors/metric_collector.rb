@@ -3,10 +3,8 @@ require 'aws_helper'
 class MetricCollector
   include AWSHelper
 
-  def initialize(options)
+  def initialize
     @options = {
-        start_time: options[:start_time],
-        end_time: options[:end_time],
         period: 5.minutes,
         statistics: ['Average']
     }
@@ -14,11 +12,35 @@ class MetricCollector
   end
 
   def collect
-    inventory = Inventory.order_by(created_at: :desc).first
+    inventory = Inventory.where(synchronized: true).first
+    abort('No synchronized inventory found, abort task') unless inventory
+
+    set_time_options(inventory)
+
     inventory.hosts.each { |host| collect_samples(host) }
+    inventory.update_attributes(last_collected_metrics_time: @options[:end_time])
   end
 
   private
+  def set_time_options(inventory)
+    interval = CONFIG.scheduler.collect_samples.interval.to_i.minutes
+
+    start_time = inventory.last_collected_metrics_time
+    start_time ||= last_sent_metrics_time(inventory)
+    start_time ||= Time.now - interval
+    end_time ||= start_time + interval
+
+    puts "Collecting samples for period #{start_time} -> #{end_time}"
+
+    @options[:start_time] = start_time.iso8601
+    @options[:end_time] = end_time.iso8601
+  end
+
+  def last_sent_metrics_time(inventory)
+    meter_response = MeterHttpClient.new.get_infrastructure(inventory.custom_id)
+    time = meter_response['hosts']&.first&.send(:[], 'last_sent_metrics_time')
+    Time.parse(host['last_sent_metrics_time']) if time
+  end
 
   def collect_samples(host)
     custom_id = host.custom_id
