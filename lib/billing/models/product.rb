@@ -12,6 +12,7 @@ class Product
   index("attr.instanceType" => 1)
   index("attr.location" => 1)
   index("attr.operatingSystem" => 1)
+  index("attr.usagetype" => 1)
 
   private
 
