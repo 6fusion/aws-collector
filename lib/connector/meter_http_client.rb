@@ -24,6 +24,11 @@ class MeterHttpClient
                   body: payload.to_json)
   end
 
+  def get_infrastructure(infrastructure_id)
+    send_to_meter(method: :get,
+                  endpoint: "/api/v1/infrastructures/#{infrastructure_id}.json")
+  end
+
   def update_infrastructure(payload, infrastructure_id)
     send_to_meter(method: :patch,
                   endpoint: "/api/v1/infrastructures/#{infrastructure_id}.json",
@@ -39,6 +44,8 @@ class MeterHttpClient
 
   def send_to_meter(options)
     case options[:method]
+      when :get
+        self.class.get(options[:endpoint])
       when :post
         self.class.post(options[:endpoint], body: options[:body])
       when :patch
