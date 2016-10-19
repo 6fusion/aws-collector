@@ -7,13 +7,21 @@ module PropertyHelper
     read_property("AWS_SECRET_KEY")
   end
 
-  def self.read_property(name, default = nil)
-    ENV[name] || read_secret_property(name) || default || fail("Property #{name} was not found")
+  def self.read_property(path, default = nil)
+    name = path.split("/").last.upcase
+    ENV[name] || read_secret_property(path) ||
+      default || fail("Property with #{path} was not found")
   end
 
   private
 
-  def self.read_secret_property(name)
-    # todo: implement it when we integrate stuff with Kubernetus
+  def self.read_secret_property(path)
+    property = "#{ENV["SECRET_DIR"]}/#{path}"
+    return unless File.exist?(property)
+
+    value = File.read(property).chomp.strip
+    return true if value == "true"
+    return false if value == "false"
+    value
   end
 end
