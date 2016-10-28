@@ -7,18 +7,35 @@ class InventoryCollector
   include Ec2Helper
   include PropertyHelper
 
+  def save!(inventory)
+    puts "Saving inventory into Mongo..."
+    inventory.save!
+    Inventory.all.each { |inv| inv.delete if inventory != inv }
+    puts "Inventory saved"
+  end
+
+  def current_inventory_json
+    begin
+      # Firstly, trying to get the most fresh inventory from Mongo
+      inventory = Inventory.order_by(created_at: :desc).first
+      return inventory if inventory
+
+      # TODO: get last inventory from meter
+
+      Inventory.new # new empty inventory
+    end.to_json
+  end
+
   def collect_inventory
-    puts "Starting AWS inventory collector..."
+    puts "Collecting the actual inventory from AWS..."
     inventory = Inventory.new(
-      organization_id: PropertyHelper.read_property("ORGNANIZATION_ID"),
-      name: PropertyHelper.read_property("ORGNANIZATION_NAME"),
       hosts: instances.map { |instance| host_model(instance) },
       volumes: volumes.map { |volume| disk_model(volume) },
       networks: vpcs.map { |vpc| nic_model(vpc) }
     )
 
-    puts "Saving the inventory into DB..."
-    inventory.save!
+    puts "AWS inventory was collected"
+    inventory
   end
 
   private
@@ -31,9 +48,12 @@ class InventoryCollector
     disks = instance.volumes.map { |volume| disk_model(volume) }
     disks << instance_disk_model(instance) if instance_disk_model(instance)
 
+    nics = instance.network_interfaces.map { |network| network_model(network) }
+    nics << instance_nic_model(instance)
+
     Host.new(
       custom_id: instance.instance_id,
-      name: tags["Name"],
+      name: tags["Name"] || instance.instance_id,
       type: type,
       region: instance.client.config.region,
       tags: tags,
@@ -47,14 +67,16 @@ class InventoryCollector
         cores: hardware.cores,
         speed_ghz: hardware.cpu_speed_ghz
       ),
-      nics: [
-        Nic.new(
-          custom_id: "united_network_of_instance_#{instance.instance_id}",
-          name: :united_network,
-          state: :available
-        )
-      ],
+      nics: nics,
       disks: disks
+    )
+  end
+
+  def network_model(network)
+    Nic.new(
+        custom_id: network.id,
+        name: network.id,
+        state: network.status,
     )
   end
 
@@ -62,7 +84,7 @@ class InventoryCollector
     tags = tags_to_map(vpc.tags)
     Nic.new(
       custom_id: vpc.id,
-      name: tags["Name"],
+      name: tags["Name"] || vpc.id,
       state: vpc.state,
       tags: tags
     )
@@ -72,7 +94,7 @@ class InventoryCollector
     tags = tags_to_map(volume.tags)
     Disk.new(
       custom_id: volume.volume_id,
-      name: tags["Name"],
+      name: tags["Name"] || volume.volume_id,
       type: volume.volume_type,
       size_gib: volume.size,
       iops: volume.iops,
@@ -92,6 +114,14 @@ class InventoryCollector
       size_gib: store.size_gb,
       instance_store_type: store.type,
       instance_stores_count: store.quantity
+    )
+  end
+
+  def instance_nic_model(instance)
+    Nic.new(
+      custom_id: "united_network_of_instance_#{instance.instance_id}",
+      name: :united_network,
+      state: :available
     )
   end
 

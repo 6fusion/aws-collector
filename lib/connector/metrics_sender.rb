@@ -20,14 +20,9 @@ class MetricsSender
     end_time = last_sample_time
     puts "Updating last sent metrics time to #{end_time}"
 
-    inventory = synced_inventory
-    hosts = inventory.hosts
-    hosts.update_all(last_sent_metrics_time: end_time)
-
-    hosts_payload = { 'hosts': hosts.collect(&:to_payload) }
-
-    response = MeterHttpClient.new.
-        update_infrastructure(hosts_payload, inventory.custom_id)
+    synced_inventory = synced_inventory
+    synced_inventory.hosts.update_all(last_sent_metrics_time: end_time)
+    response = InventoryConnector.new.send_infrastructure(synced_inventory)
 
     if response.code != 200
       puts "Error occurred during updating last sent time for infrastructure id '#{inventory.custom_id}'"

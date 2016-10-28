@@ -1,4 +1,17 @@
 module PropertyHelper
+
+  def self.infrastructure_id
+    read_property("INFRASTRUCTURE_ID")
+  end
+
+  def self.infrastructure_name
+    read_property("INFRASTRUCTURE_NAME")
+  end
+
+  def self.organization_id
+    read_property("ORGANIZATION_ID")
+  end
+
   def self.aws_access_key
     read_property("AWS_ACCESS_KEY")
   end

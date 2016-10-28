@@ -11,3 +11,4 @@
 /.ssl/*
 
 .DS_Store
+.env.sh
