@@ -15,6 +15,8 @@ class Disk
   field :state, type: String
   field :tags, type: Hash, default: {}
 
+  field :cost_per_hour, type: String
+
   validates :custom_id, :type, presence: true
 
   def infrastructure_json
@@ -27,7 +29,8 @@ class Disk
       size_gib: size_gib,
       iops: iops,
       state: state,
-      tags: tags.join.nil_if_empty
+      tags: tags.join.nil_if_empty,
+      cost_per_hour: cost_per_hour
     }.compact
   end
 

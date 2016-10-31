@@ -33,16 +33,20 @@ module AWS
         instance_type = options[:instance_type]
         operating_system = options[:operating_system]
         ebs_optimized = options[:ebs_optimized]
+        tenancy = options[:tenancy]
 
         criteria = {
           "offer_code" => "AmazonEC2",
           "product_family" => "Compute Instance",
+          "attr.preInstalledSw" => "NA",
           "attr.location" => REGIONS[region],
           "attr.instanceType" => instance_type,
-          "attr.operatingSystem" => operating_system
+          "attr.operatingSystem" => operating_system,
+          "attr.tenancy" => tenancy == "default" ? "Shared" : tenancy
         }
 
-        criteria["attr.storage"] = "EBS only" if ebs_optimized
+        criteria["attr.ebsOptimized"] = "Yes" if ebs_optimized
+        criteria["attr.licenseModel"] = "License Included" if operating_system == "Windows"
 
         AWS::PriceList.find(criteria)
       end
@@ -53,11 +57,20 @@ module AWS
         region = options[:region]
         ebs_type = options[:type]
 
+        case ebs_type
+          when "standard"
+            ebs_type = "$"
+          when "io1"
+            ebs_type = ".piops"
+          else
+            ebs_type = ".#{ebs_type}"
+        end
+
         criteria = {
             "offer_code" => "AmazonEC2",
             "product_family" => "Storage",
             "attr.location" => REGIONS[region],
-            "attr.usagetype" => /EBS:VolumeUsage.#{ebs_type}/i
+            "attr.usagetype" => /EBS:VolumeUsage#{ebs_type}/i
         }
 
         AWS::PriceList.find(criteria)
