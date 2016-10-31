@@ -22,11 +22,15 @@ class Inventory
     {
       custom_id: custom_id,
       name: name,
-      cost_per_hour: 0,
+      cost_per_hour: total_cost,
       tags: (tags || []).join.nil_if_empty,
       hosts: hosts.map(&:infrastructure_json) || [],
       networks: networks.map(&:infrastructure_json) || [],
       volumes: volumes.map(&:infrastructure_json) || []
     }.compact
+  end
+
+  def total_cost
+    hosts.sum(&:total_cost)
   end
 end

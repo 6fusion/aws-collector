@@ -30,7 +30,7 @@ class Disk
       iops: iops,
       state: state,
       tags: tags.join.nil_if_empty,
-      cost_per_hour: cost_per_hour
+      cost_per_hour: cost
     }.compact
   end
 
@@ -44,5 +44,9 @@ class Disk
 
   def bytes
     size_gib * 1_073_741_824.0
+  end
+
+  def cost
+    (cost_per_hour || 0).to_f
   end
 end

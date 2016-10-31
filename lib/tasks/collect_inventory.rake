@@ -8,7 +8,7 @@ task :collect_inventory do
 
   actual_inventory = collector.collect_inventory
 
-  MetricCollector.new.collect
+  MetricsSender.new.send
 
   connector.send_infrastructure(actual_inventory)
   actual_inventory.hosts.each { |host| connector.send_host(host) }
