@@ -18,6 +18,7 @@ class Host
   field :platform, type: String
 
   field :last_sent_metrics_time, type: Time
+  field :cost_per_hour, type: String
 
   validates :custom_id, :type, :region, :state, :monitoring, :network, presence: true
   validates :memory_gb,
@@ -45,7 +46,8 @@ class Host
       last_sent_metrics_time: last_sent_metrics_time,
       cpu: cpu.infrastructure_json,
       disks: disks.map(&:infrastructure_json),
-      nics: nics.map(&:infrastructure_json)
+      nics: nics.map(&:infrastructure_json),
+      cost_per_hour: cost_per_hour
     }.compact
   end
 

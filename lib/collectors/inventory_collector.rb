@@ -6,6 +6,7 @@ class InventoryCollector
   include InventoryHelper
   include Ec2Helper
   include PropertyHelper
+  include AWS::PriceList
 
   def save!(inventory)
     puts "Saving inventory into Mongo..."
@@ -51,6 +52,14 @@ class InventoryCollector
     nics = instance.network_interfaces.map { |network| network_model(network) }
     nics << instance_nic_model(instance)
 
+    region = availability_zone_to_region(instance.placement.availability_zone)
+    platform = instance.platform.nil? ? "Linux" : "Windows"
+    cost_per_hour = EC2.cost_per_hour(region: region,
+                                      instance_type: type,
+                                      operating_system: platform,
+                                      ebs_optimized: instance.ebs_optimized,
+                                      tenancy: instance.placement.tenancy)
+
     Host.new(
       custom_id: instance.instance_id,
       name: tags["Name"] || instance.instance_id,
@@ -62,13 +71,14 @@ class InventoryCollector
       monitoring: instance.monitoring.state,
       memory_gb: hardware.ram_gb,
       network: hardware.network,
-      platform: instance.platform,
+      platform: platform,
       cpu: Cpu.new(
         cores: hardware.cores,
         speed_ghz: hardware.cpu_speed_ghz
       ),
       nics: nics,
-      disks: disks
+      disks: disks,
+      cost_per_hour: cost_per_hour
     )
   end
 
@@ -92,14 +102,20 @@ class InventoryCollector
 
   def disk_model(volume)
     tags = tags_to_map(volume.tags)
+    region = availability_zone_to_region(volume.availability_zone)
+    volume_type = volume.volume_type
+    cost_per_hour = EBS.cost_per_hour(region: region,
+                                      type: volume_type)
+
     Disk.new(
       custom_id: volume.volume_id,
       name: tags["Name"] || volume.volume_id,
-      type: volume.volume_type,
+      type: volume_type,
       size_gib: volume.size,
       iops: volume.iops,
       state: volume.state,
-      tags: tags
+      tags: tags,
+      cost_per_hour: cost_per_hour
     )
   end
 
@@ -149,5 +165,9 @@ class InventoryCollector
 
   def tags_to_map(tags)
     Hash[ tags.map { |tag| [tag.key, tag.value] } ]
+  end
+
+  def availability_zone_to_region(availability_zone)
+    availability_zone.gsub(/[a-z]$/, "")
   end
 end
