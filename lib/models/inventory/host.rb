@@ -47,7 +47,7 @@ class Host
       cpu: cpu.infrastructure_json,
       disks: disks.map(&:infrastructure_json),
       nics: nics.map(&:infrastructure_json),
-      cost_per_hour: cost_per_hour
+      cost_per_hour: total_cost
     }.compact
   end
 
@@ -62,5 +62,13 @@ class Host
       disks: disks.map(&:to_payload),
       nics: nics.map(&:to_payload)
     }.compact
+  end
+
+  def total_cost
+    cost + disks.sum(&:cost)
+  end
+
+  def cost
+    (cost_per_hour || 0).to_f
   end
 end

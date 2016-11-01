@@ -6,8 +6,6 @@ MONGOID_ENV - responsible for the config part to be used from config/mongoid.yml
 
 INVENTORY TODO
 
-Send all hosts one by one
-
 Implement current_inventory in conjunction with Meter API
 Fix alerts
 Send Infrastructure and Hosts only when something has changed
