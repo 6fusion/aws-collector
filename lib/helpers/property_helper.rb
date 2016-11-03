@@ -28,9 +28,13 @@ module PropertyHelper
     read_property("DETAILED_REPORT_PREFIX")
   end
 
+  def self.access_token
+    read_property("ACCESS_TOKEN")
+  end
+
   def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
-    ENV[name] || read_secret_property(path) ||
+    Base64.decode64(ENV[name].to_s) || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
   end
 
