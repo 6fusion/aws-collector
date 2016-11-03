@@ -12,10 +12,21 @@ class MeterHttpClient
                   body: { samples: payload }.to_json)
   end
 
-  def post_machine(infrastructure_id, payload)
+  def create_machine(infrastructure_id, payload)
     send_to_meter(method: :post,
                   endpoint: "/api/v1/infrastructures/#{infrastructure_id}/machines.json",
                   body: payload.to_json)
+  end
+
+  def update_machine(machine_id, payload)
+    send_to_meter(method: :patch,
+                  endpoint: "/api/v1/machines/#{machine_id}.json",
+                  body: payload.to_json)
+  end
+
+  def infrastructures(organization_id)
+    send_to_meter(method: :get,
+                  endpoint: "/api/v1/infrastructures.json?organization_id=#{organization_id}")
   end
 
   def post_infrastructure(payload, organization_id)
@@ -48,7 +59,8 @@ class MeterHttpClient
   private
 
   def send_to_meter(options)
-    case options[:method]
+    puts "Sending reqest to meter: #{options_to_str(options)}"
+    response = case options[:method]
       when :get
         self.class.get(options[:endpoint])
       when :post
@@ -57,6 +69,19 @@ class MeterHttpClient
         self.class.patch(options[:endpoint], body: options[:body])
       when :delete
         self.class.delete(options[:endpoint])
-    end
+               end
+    response.success? || response.code == 404 ||
+        raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
+    response
+  end
+
+  def full_options_to_str(options)
+    "#{options_to_str(options)}\n#{options[:body]}"
+  end
+
+  def options_to_str(options)
+    method = options[:method].upcase
+    url = options[:endpoint]
+    "#{method} #{url}"
   end
 end

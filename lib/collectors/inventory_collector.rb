@@ -17,14 +17,17 @@ class InventoryCollector
 
   def current_inventory_json
     begin
-      # Firstly, trying to get the most fresh inventory from Mongo
+      puts "Trying to get the current inventory from MongoDB..."
       inventory = Inventory.order_by(created_at: :desc).first
-      return inventory if inventory
+      return inventory.infrastructure_json if inventory
 
-      # TODO: get last inventory from meter
+      puts "Trying to get the current inventory from Meter..."
+      inventory = InventoryConnector.new.infrastructure_json
+      return inventory.compact_recursive.symbolize_recursive if inventory
 
-      Inventory.new # new empty inventory
-    end.to_json
+      puts "Inventory does not exist yet on meter. Using a new one..."
+      Inventory.new.infrastructure_json # new empty inventory
+    end
   end
 
   def collect_inventory
@@ -67,7 +70,6 @@ class InventoryCollector
       region: instance.client.config.region,
       tags: tags,
       state: instance.state.name,
-      launch_time: instance.launch_time,
       monitoring: instance.monitoring.state,
       memory_gb: hardware.ram_gb,
       network: hardware.network,

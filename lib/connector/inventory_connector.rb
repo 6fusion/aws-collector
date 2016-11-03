@@ -11,26 +11,35 @@ class InventoryConnector
   end
 
   def send_infrastructure(inventory)
-    puts "Sending inventory to meter..."
-    send("Failed to send post_infrastructure with ID #{@organization_id}. Inventory: #{inventory}") do
-      @meter_client.post_infrastructure(inventory.infrastructure_json, @organization_id)
+    payload = inventory.infrastructure_json
+    if infrastructure_exist?
+      @meter_client.update_infrastructure(payload, @infrastructure_id)
+    else
+      @meter_client.post_infrastructure(payload, @organization_id)
     end
-    puts "Inventory sent"
   end
 
-  def send_host(host)
-    puts "Sending host [#{host.custom_id}]..."
+  def create_host(host)
     payload = host.to_payload
-    send("Failed to send machine. Infrastructure ID: #{@infrastructure_id}. Payload: #{payload}") do
-      @meter_client.post_machine(@infrastructure_id, payload)
-    end
-    puts "Host sent"
+    @meter_client.create_machine(@infrastructure_id, payload)
   end
 
-  private
+  def delete_host(machine_id, payload)
+    payload[:status] = :deleted
+    @meter_client.update_machine(machine_id, payload)
+  end
 
-  def send(error_msg)
-    response = yield
-    response.success? || raise("#{error_msg}\n\nResponse: #{response}")
+  def infrastructure_exist?
+    infrastructure.success?
+  end
+
+  def infrastructure_json
+    response = infrastructure
+    return unless response.success?
+    JSON.parse(response.body)
+  end
+
+  def infrastructure
+    @meter_client.get_infrastructure(@infrastructure_id)
   end
 end

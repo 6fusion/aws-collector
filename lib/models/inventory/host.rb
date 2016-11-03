@@ -10,7 +10,7 @@ class Host
   field :tags, type: Hash
 
   field :state, type: String
-  field :launch_time, type: DateTime
+  field :status, type: String, default: :active
   field :monitoring, type: String
 
   field :memory_gb, type: Float
@@ -36,19 +36,22 @@ class Host
       name: name,
       type: type,
       region: region,
-      tags: tags.join.nil_if_empty,
+      tags: tags&.join || [],
       state: state,
-      launch_time: launch_time,
+      status: status,
       monitoring: monitoring,
-      memory_gb: memory_gb,
+      memory_bytes: memory_bytes,
       network: network,
       platform: platform,
       last_sent_metrics_time: last_sent_metrics_time,
-      cpu: cpu.infrastructure_json,
+      cpus: [{
+        cores: cpu.cores,
+        speed_hz: cpu.speed_hz
+      }],
       disks: disks.map(&:infrastructure_json),
       nics: nics.map(&:infrastructure_json),
       cost_per_hour: total_cost
-    }.compact
+    }
   end
 
   def to_payload
@@ -57,11 +60,11 @@ class Host
       name: name,
       cpu_count: cpu.cores,
       cpu_speed_hz: cpu.speed_hz,
-      tags: tags.join.nil_if_empty,
-      status: state,
+      tags: tags&.join || [],
+      status: status,
       disks: disks.map(&:to_payload),
       nics: nics.map(&:to_payload)
-    }.compact
+    }
   end
 
   def total_cost
@@ -70,5 +73,9 @@ class Host
 
   def cost
     (cost_per_hour || 0).to_f
+  end
+
+  def memory_bytes
+    memory_gb * 1024.0 * 1024.0 * 1024.0
   end
 end

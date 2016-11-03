@@ -6,12 +6,17 @@ task :collect_inventory do
 
   connector.check_organization_exist
 
+  old_inventory_json = collector.current_inventory_json
   actual_inventory = collector.collect_inventory
 
-  MetricsSender.new.send
+  if actual_inventory.different_from_old?(old_inventory_json)
+    connector.send_infrastructure(actual_inventory)
+    collector.save! actual_inventory
+  end
 
-  connector.send_infrastructure(actual_inventory)
-  actual_inventory.hosts.each { |host| connector.send_host(host) }
-
-  collector.save! actual_inventory
+  actual_inventory.compare_hosts(old_inventory_json) do |new_host, old_host|
+    connector.create_host(new_host) if old_host.nil?
+    connector.delete_host(old_host[:id], old_host) if new_host.nil?
+    next if new_host.nil? || old_host.nil?
+  end
 end
