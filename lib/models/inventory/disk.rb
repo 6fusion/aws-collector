@@ -13,6 +13,7 @@ class Disk
   field :iops, type: Integer
 
   field :state, type: String
+  field :status, type: String, default: :active
   field :tags, type: Hash, default: {}
 
   field :cost_per_hour, type: String
@@ -27,19 +28,22 @@ class Disk
       instance_store_type: instance_store_type,
       instance_stores_count: instance_stores_count,
       size_gib: size_gib,
+      storage_bytes: bytes,
       iops: iops,
       state: state,
-      tags: tags.join.nil_if_empty,
+      status: status,
+      tags: tags&.join || [],
       cost_per_hour: cost
-    }.compact
+    }
   end
 
   def to_payload
     {
       custom_id: custom_id,
       name: name,
+      status: status,
       storage_bytes: bytes
-    }.compact
+    }
   end
 
   def bytes

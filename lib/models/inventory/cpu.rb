@@ -12,7 +12,7 @@ class Cpu
     {
       cores: cores,
       speed_ghz: speed_ghz
-    }.compact
+    }
   end
 
   def speed_hz

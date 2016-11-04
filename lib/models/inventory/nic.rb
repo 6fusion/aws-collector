@@ -6,6 +6,7 @@ class Nic
   field :custom_id, type: String
   field :name, type: String
   field :state, type: String
+  field :status, type: String, default: :active
 
   field :tags, type: Hash, default: {}
 
@@ -16,15 +17,17 @@ class Nic
       custom_id: custom_id,
       name: name,
       state: state,
-      tags: tags.join.nil_if_empty
-    }.compact
+      status: status,
+      tags: tags&.join || []
+    }
   end
 
   def to_payload
     {
       custom_id: custom_id,
       name: name,
+      status: status,
       kind: :WAN
-    }.compact
+    }
   end
 end
