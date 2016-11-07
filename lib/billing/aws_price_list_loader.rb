@@ -13,8 +13,13 @@ module AWS
       response = http_get("/offers/v1.0/aws/index.json").to_dot
 
       response.offers.each do |offer|
-        persist offer_file(offer.last["offerCode"],
-                           offer.last["currentVersionUrl"]).to_dot
+        begin
+          offer_code = offer.last["offerCode"]
+          current_version_url = offer.last["currentVersionUrl"]
+          persist offer_file(offer_code, current_version_url).to_dot
+        rescue StandardError => e
+          puts "Skipping persistence of #{offer_code} because of error: #{e.message}"
+        end
       end
     end
 
@@ -22,11 +27,11 @@ module AWS
 
     def self.offer_file(offer_code, current_version_url)
       puts "Fetching price details for #{offer_code}"
-
       http_get(current_version_url)
     end
 
     def self.flush
+      puts "Removing old AWS price list API details from DB"
       Product.destroy_all
       Term.destroy_all
     end
@@ -65,7 +70,8 @@ module AWS
       begin
         get(url)
       rescue
-        retry_count-= 1
+        retry_count -= 1
+        puts "Failed to make get request to: #{url} | Retries left: #{retry_count}"
         retry if retry_count >= 0
       end
     end

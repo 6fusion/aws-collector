@@ -16,3 +16,13 @@ scheduler:
     rake_command: send_samples
     interval: 15m
     first_in: 15m
+
+  fetch_price:
+    rake_command: fetch_price
+    interval: 30d
+    first_in: 0 # Immediately
+
+  fetch_detailed_report:
+    rake_command: fetch_detailed_report
+    interval: 1d
+    first_in: 0 # Immediately

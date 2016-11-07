@@ -1,12 +1,13 @@
 require 'inventory_helper'
-require 'ec2_helper'
+require 'aws_helper'
 require 'property_helper'
 
 class InventoryCollector
   include InventoryHelper
-  include Ec2Helper
+  include AWSHelper
   include PropertyHelper
   include AWS::PriceList
+  include AWS::DetailedReport
 
   def save!(inventory)
     puts "Saving inventory into Mongo..."
@@ -46,6 +47,7 @@ class InventoryCollector
 
   def host_model(instance)
     type = instance.instance_type
+    instance_id = instance.instance_id
     tags = tags_to_map(instance.tags).to_dot
     hardware = INSTANCE_TYPES[type].to_dot
 
@@ -57,14 +59,17 @@ class InventoryCollector
 
     region = availability_zone_to_region(instance.placement.availability_zone)
     platform = instance.platform.nil? ? "Linux" : "Windows"
-    cost_per_hour = EC2.cost_per_hour(region: region,
-                                      instance_type: type,
-                                      operating_system: platform,
-                                      ebs_optimized: instance.ebs_optimized,
-                                      tenancy: instance.placement.tenancy)
+
+    cost_per_hour =
+      AWS::DetailedReport.cost_per_hour(instance_id) ||
+      EC2.cost_per_hour(region: region,
+                        instance_type: type,
+                        operating_system: platform,
+                        ebs_optimized: instance.ebs_optimized,
+                        tenancy: instance.placement.tenancy)
 
     Host.new(
-      custom_id: instance.instance_id,
+      custom_id: instance_id,
       name: tags["Name"] || instance.instance_id,
       type: type,
       region: instance.client.config.region,
@@ -145,24 +150,24 @@ class InventoryCollector
 
   def vpcs
     regions.collect do |region|
-      aws_ec2_resource(region).vpcs.entries
+      Resources.ec2(region).vpcs.entries
     end.compact.flatten
   end
 
   def volumes
     regions.collect do |region|
-      aws_ec2_resource(region).volumes.entries
+      Resources.ec2(region).volumes.entries
     end.compact.flatten
   end
 
   def instances
     regions.collect do |region|
-      aws_ec2_resource(region).instances.entries
+      Resources.ec2(region).instances.entries
     end.compact.flatten
   end
 
   def regions
-    aws_client_ec2.describe_regions.data.regions.map(&:region_name)
+    Clients.ec2.describe_regions.data.regions.map(&:region_name)
   end
 
   def tags_to_map(tags)
