@@ -59,16 +59,19 @@ class MeterHttpClient
   private
 
   def send_to_meter(options)
+    access_token = PropertyHelper.access_token
+    query =  {access_token: access_token} unless access_token.empty?
+    
     puts "Sending reqest to meter: #{options_to_str(options)}"
     response = case options[:method]
       when :get
-        self.class.get(options[:endpoint])
+        self.class.get(options[:endpoint], query: query)
       when :post
-        self.class.post(options[:endpoint], body: options[:body])
+        self.class.post(options[:endpoint], body: options[:body], query: query)
       when :patch
-        self.class.patch(options[:endpoint], body: options[:body])
+        self.class.patch(options[:endpoint], body: options[:body], query: query)
       when :delete
-        self.class.delete(options[:endpoint])
+        self.class.delete(options[:endpoint], query: query)
                end
     response.success? || response.code == 404 ||
         raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
