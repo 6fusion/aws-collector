@@ -20,6 +20,14 @@ module PropertyHelper
     read_property("AWS_SECRET_KEY")
   end
 
+  def self.detailed_report_bucket
+    read_property("DETAILED_REPORT_BUCKET")
+  end
+
+  def self.detailed_report_prefix
+    read_property("DETAILED_REPORT_PREFIX")
+  end
+
   def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
     ENV[name] || read_secret_property(path) ||

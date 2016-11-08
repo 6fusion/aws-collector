@@ -1,23 +1,26 @@
 module AWS
   module PriceList
     REGIONS = {
-        "us-east-1" => "US East (N. Virginia)",
-        "us-west-2" => "US West (Oregon)",
-        "us-west-1" => "US West (N. California)",
-        "eu-west-1" => "EU (Ireland)",
-        "eu-central-1" => "EU (Frankfurt)",
-        "ap-southeast-1" => "Asia Pacific (Singapore)",
-        "ap-northeast-1" => "Asia Pacific (Tokyo)",
-        "ap-southeast-2" => "Asia Pacific (Sydney)",
-        "ap-northeast-2" => "Asia Pacific (Seoul)",
-        "ap-south-1" => "Asia Pacific (Mumbai)",
-        "sa-east-1" => "South America (São Paulo)"
+      "us-east-1" => "US East (N. Virginia)",
+      "us-west-2" => "US West (Oregon)",
+      "us-west-1" => "US West (N. California)",
+      "eu-west-1" => "EU (Ireland)",
+      "eu-central-1" => "EU (Frankfurt)",
+      "ap-southeast-1" => "Asia Pacific (Singapore)",
+      "ap-northeast-1" => "Asia Pacific (Tokyo)",
+      "ap-southeast-2" => "Asia Pacific (Sydney)",
+      "ap-northeast-2" => "Asia Pacific (Seoul)",
+      "ap-south-1" => "Asia Pacific (Mumbai)",
+      "sa-east-1" => "South America (São Paulo)"
     }
 
     def self.find(criteria)
       product = Product.where(criteria).first
 
-      raise "Product does not exist: #{criteria}" unless product
+      unless product
+        puts "Product does not exist: #{criteria}"
+        return 0
+      end
 
       term = Term.find_by(id: "AmazonEC2:OnDemand:#{product.sku}").data
       decode(term).first.last["priceDimensions"].first.last["pricePerUnit"].first.last
@@ -67,10 +70,10 @@ module AWS
         end
 
         criteria = {
-            "offer_code" => "AmazonEC2",
-            "product_family" => "Storage",
-            "attr.location" => REGIONS[region],
-            "attr.usagetype" => /EBS:VolumeUsage#{ebs_type}/i
+          "offer_code" => "AmazonEC2",
+          "product_family" => "Storage",
+          "attr.location" => REGIONS[region],
+          "attr.usagetype" => /EBS:VolumeUsage#{ebs_type}/i
         }
 
         AWS::PriceList.find(criteria)
