@@ -26,7 +26,9 @@ class MeterHttpClient
 
   def infrastructures(organization_id)
     send_to_meter(method: :get,
-                  endpoint: "/api/v1/infrastructures.json?organization_id=#{organization_id}")
+                  endpoint: "/api/v1/infrastructures.json",
+                  query: {organization_id: organization_id}
+    )
   end
 
   def post_infrastructure(payload, organization_id)
@@ -59,8 +61,9 @@ class MeterHttpClient
   private
 
   def send_to_meter(options)
+    query = options[:query] || {}
     access_token = PropertyHelper.access_token
-    query =  {access_token: access_token} unless access_token.empty?
+    query[:access_token] = access_token unless access_token.empty?
     
     puts "Sending reqest to meter: #{options_to_str(options)}"
     response = case options[:method]
