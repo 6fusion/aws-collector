@@ -11,8 +11,9 @@ task :collect_inventory do
 
   if actual_inventory.different_from_old?(old_inventory_json)
     connector.send_infrastructure(actual_inventory)
-    collector.save! actual_inventory
   end
+
+  collector.save! actual_inventory
 
   actual_inventory.compare_hosts(old_inventory_json) do |new_host, old_host|
     connector.create_host(new_host) if old_host.nil?
