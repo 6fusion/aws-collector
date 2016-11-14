@@ -60,13 +60,14 @@ class InventoryCollector
     region = availability_zone_to_region(instance.placement.availability_zone)
     platform = instance.platform.nil? ? "Linux" : "Windows"
 
-    cost_per_hour =
-      AWS::DetailedReport.cost_per_hour(instance_id) ||
-      EC2.cost_per_hour(region: region,
+    price_details =
+      AWS::DetailedReport.price_details(instance_id) ||
+      EC2.price_details(region: region,
                         instance_type: type,
                         operating_system: platform,
                         ebs_optimized: instance.ebs_optimized,
-                        tenancy: instance.placement.tenancy)
+                        tenancy: instance.placement.tenancy) ||
+      { cost_per_hour: 0, billing_resource: "none" }.to_dot
 
     Host.new(
       custom_id: instance_id,
@@ -85,7 +86,8 @@ class InventoryCollector
       ),
       nics: nics,
       disks: disks,
-      cost_per_hour: cost_per_hour
+      cost_per_hour: price_details.cost_per_hour,
+      billing_resource: price_details.billing_resource
     )
   end
 
@@ -111,8 +113,9 @@ class InventoryCollector
     tags = tags_to_map(volume.tags)
     region = availability_zone_to_region(volume.availability_zone)
     volume_type = volume.volume_type
-    cost_per_hour = EBS.cost_per_hour(region: region,
-                                      type: volume_type)
+    price_details =
+      EBS.price_details(region: region, type: volume_type) ||
+      { cost_per_hour: 0, billing_resource: "none" }.to_dot
 
     Disk.new(
       custom_id: volume.volume_id,
@@ -122,7 +125,8 @@ class InventoryCollector
       iops: volume.iops,
       state: volume.state,
       tags: tags,
-      cost_per_hour: cost_per_hour
+      cost_per_hour: price_details.cost_per_hour,
+      billing_resource: price_details.billing_resource
     )
   end
 

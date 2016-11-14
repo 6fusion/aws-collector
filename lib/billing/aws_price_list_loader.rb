@@ -9,17 +9,14 @@ module AWS
 
     def self.fetch
       flush
-
       response = http_get("/offers/v1.0/aws/index.json").to_dot
 
-      response.offers.each do |offer|
-        begin
-          offer_code = offer.last["offerCode"]
-          current_version_url = offer.last["currentVersionUrl"]
-          persist offer_file(offer_code, current_version_url).to_dot
-        rescue StandardError => e
-          puts "Skipping persistence of #{offer_code} because of error: #{e.message}"
-        end
+      begin
+        ec2_offer = response.offers["AmazonEC2"]
+        persist offer_file(ec2_offer["offerCode"],
+                           ec2_offer["currentVersionUrl"]).to_dot
+      rescue StandardError => e
+        puts "Skipping persistence of #{offer_code} because of error: #{e.message}"
       end
     end
 
