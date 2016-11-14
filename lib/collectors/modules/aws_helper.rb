@@ -17,7 +17,26 @@ module AWSHelper
     end
 
     def self.s3(region = "us-east-1")
-      Aws::S3::Client.new(region: region)
+      Aws::S3::Client.new(
+          region: region,
+          access_key_id: PropertyHelper.aws_access_key,
+          secret_access_key: PropertyHelper.aws_secret_key
+      )
+    end
+
+    def self.iam
+      Aws::IAM::Client.new(
+          access_key_id: PropertyHelper.aws_access_key,
+          secret_access_key: PropertyHelper.aws_secret_key
+      )
+    end
+
+    def self.iam_username()
+      iam.get_user.data.user.user_name
+    end
+
+    def self.iam_userid()
+      iam.get_user.data.user.user_id
     end
   end
 

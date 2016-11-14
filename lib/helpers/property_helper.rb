@@ -1,13 +1,5 @@
 module PropertyHelper
 
-  def self.infrastructure_id
-    read_property("INFRASTRUCTURE_ID")
-  end
-
-  def self.infrastructure_name
-    read_property("INFRASTRUCTURE_NAME")
-  end
-
   def self.organization_id
     read_property("ORGANIZATION_ID")
   end
@@ -28,8 +20,20 @@ module PropertyHelper
     read_property("DETAILED_REPORT_PREFIX")
   end
 
-  def self.access_token
-    read_property("ACCESS_TOKEN")
+  def self.token
+    read_property("TOKEN")
+  end
+
+  def self.host
+    read_property("HOST")
+  end
+
+  def self.verify_ssl
+    read_property("VERIFY-SSL") == "1"
+  end
+
+  def self.use_ssl
+    read_property("USE-SSL") == "1"
   end
 
   def self.read_property(path, default = nil)

@@ -3,7 +3,6 @@ require "httparty"
 class MeterHttpClient
   include HTTParty
 
-  base_uri "http://a301086896f9d11e69df00ac2d1bb6f0-1419040031.us-east-1.elb.amazonaws.com"
   headers content_type: "application/json"
 
   def samples(payload)
@@ -61,21 +60,21 @@ class MeterHttpClient
   private
 
   def send_to_meter(options)
-    query = options[:query] || {}
-    access_token = PropertyHelper.access_token
-    query[:access_token] = access_token unless access_token.empty?
-    
+    self.class.base_uri(PropertyHelper.use_ssl ? "https://" : "http://" + PropertyHelper.host)
+
+    req_options = {
+        query: query_with_token(options),
+        verify: PropertyHelper.verify_ssl
+    }
+
+    if [:post, :patch].include? options[:method]
+      req_options[:body] = options[:body]
+    end
+
     puts "Sending reqest to meter: #{options_to_str(options)}"
-    response = case options[:method]
-      when :get
-        self.class.get(options[:endpoint], query: query)
-      when :post
-        self.class.post(options[:endpoint], body: options[:body], query: query)
-      when :patch
-        self.class.patch(options[:endpoint], body: options[:body], query: query)
-      when :delete
-        self.class.delete(options[:endpoint], query: query)
-               end
+
+    response = self.class.send(options[:method], options[:endpoint], req_options)
+
     response.success? || response.code == 404 ||
         raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
     response
@@ -83,6 +82,13 @@ class MeterHttpClient
 
   def full_options_to_str(options)
     "#{options_to_str(options)}\n#{options[:body]}"
+  end
+
+  def query_with_token(options)
+    query = options[:query] || {}
+    token = PropertyHelper.token
+    query[:access_token] = token unless token.empty?
+    query
   end
 
   def options_to_str(options)

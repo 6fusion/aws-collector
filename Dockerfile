@@ -6,6 +6,8 @@ RUN groupadd -r mongodb && useradd -r -g mongodb mongodb
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		numactl \
+		apt-transport-https \
+		ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
 # grab gosu for easy step-down from root
@@ -19,8 +21,7 @@ RUN set -x \
 	&& gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
 	&& rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
 	&& chmod +x /usr/local/bin/gosu \
-	&& gosu nobody true \
-	&& apt-get purge -y --auto-remove ca-certificates wget
+	&& gosu nobody true
 
 # pub   4096R/A15703C6 2016-01-11 [expires: 2018-01-10]
 #       Key fingerprint = 0C49 F373 0359 A145 1858  5931 BC71 1F9B A157 03C6

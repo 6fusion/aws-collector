@@ -1,14 +1,15 @@
 require "property_helper"
 require "hash_extensions"
+require "aws_helper"
 
 class Inventory
   include Mongoid::Document
   include Mongoid::Timestamps::Created
   include PropertyHelper
 
-  field :name, type: String, default: PropertyHelper.infrastructure_name
+  field :name, type: String, default: AWSHelper::Clients.iam_username
   field :tags, type: Array, default: []
-  field :custom_id, type: String, default: PropertyHelper.infrastructure_id
+  field :custom_id, type: String, default: AWSHelper::Clients.iam_userid
   field :synchronized, type: Boolean, default: true
   field :last_collected_metrics_time, type: Time
 
