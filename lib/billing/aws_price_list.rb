@@ -16,47 +16,51 @@ module AWS
 
     def self.find(criteria)
       product = Product.where(criteria).first
-
-      unless product
-        puts "Product does not exist: #{criteria}"
-        return 0
-      end
+      return unless product
 
       term = Term.find_by(id: "AmazonEC2:OnDemand:#{product.sku}").data
-      decode(term).first.last["priceDimensions"].first.last["pricePerUnit"].first.last
+      cost_per_hour = decode(term).
+                      first.last["priceDimensions"].
+                      first.last["pricePerUnit"].
+                      first.last
+
+      return unless cost_per_hour
+
+      { cost_per_hour: cost_per_hour,
+        billing_resource: "AWS Price List API" }.to_dot
     end
+  end
 
-    def self.decode(json)
-      JSON.parse(json.to_json.gsub(/%2E/, "."))
-    end
+  def self.decode(json)
+    JSON.parse(json.to_json.gsub(/%2E/, "."))
+  end
 
-    module EC2
-      def self.cost_per_hour(options)
-        region = options[:region]
-        instance_type = options[:instance_type]
-        operating_system = options[:operating_system]
-        ebs_optimized = options[:ebs_optimized]
-        tenancy = options[:tenancy]
+  module EC2
+    def self.price_details(options)
+      region = options[:region]
+      instance_type = options[:instance_type]
+      operating_system = options[:operating_system]
+      ebs_optimized = options[:ebs_optimized]
+      tenancy = options[:tenancy]
 
-        criteria = {
-          "offer_code" => "AmazonEC2",
-          "product_family" => "Compute Instance",
-          "attr.preInstalledSw" => "NA",
-          "attr.location" => REGIONS[region],
-          "attr.instanceType" => instance_type,
-          "attr.operatingSystem" => operating_system,
-          "attr.tenancy" => tenancy == "default" ? "Shared" : tenancy
-        }
+      criteria = {
+        "offer_code" => "AmazonEC2",
+        "product_family" => "Compute Instance",
+        "attr.preInstalledSw" => "NA",
+        "attr.location" => REGIONS[region],
+        "attr.instanceType" => instance_type,
+        "attr.operatingSystem" => operating_system,
+        "attr.tenancy" => tenancy == "default" ? "Shared" : tenancy
+      }
 
-        criteria["attr.ebsOptimized"] = "Yes" if ebs_optimized
-        criteria["attr.licenseModel"] = "License Included" if operating_system == "Windows"
+      criteria["attr.ebsOptimized"] = "Yes" if ebs_optimized
+      criteria["attr.licenseModel"] = "License Included" if operating_system == "Windows"
 
-        AWS::PriceList.find(criteria)
-      end
+      AWS::PriceList.find(criteria)
     end
 
     module EBS
-      def self.cost_per_hour(options)
+      def self.price_details(options)
         region = options[:region]
         ebs_type = options[:type]
 

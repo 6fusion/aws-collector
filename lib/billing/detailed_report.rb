@@ -1,13 +1,13 @@
 require "aws_helper"
 require "zipruby"
-require "property_helper"
 
 module AWS
   module DetailedReport
     include AWSHelper
-    include PropertyHelper
 
     def self.fetch
+      detailed_report_prefix = PropertyHelper.detailed_report_prefix
+      detailed_report_bucket = PropertyHelper.detailed_report_bucket
       report_manifest_key = "/#{detailed_report_prefix}/#{date_range}/#{detailed_report_prefix}-Manifest.json"
 
       puts "Retrieving detailed report manifest from: #{report_manifest_key}"
@@ -30,7 +30,7 @@ module AWS
       end
     end
 
-    def self.cost_per_hour(instance_id)
+    def self.price_details(instance_id)
       criteria = {
         resource_id: instance_id,
         usage_type: /^(SpotUsage|BoxUsage):/i
@@ -39,7 +39,8 @@ module AWS
       report = ReportRow.where(criteria).sort(usage_start_date: -1).first
       return unless report
 
-      report.cost_per_hour
+      { cost_per_hour: report.cost_per_hour,
+        billing_resource: "Detailed Report" }.to_dot
     end
 
     private

@@ -17,6 +17,7 @@ class Disk
   field :tags, type: Hash, default: {}
 
   field :cost_per_hour, type: String
+  field :billing_resource, type: String
 
   validates :custom_id, :type, presence: true
 

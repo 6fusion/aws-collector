@@ -18,7 +18,9 @@ class Host
   field :platform, type: String
 
   field :last_sent_metrics_time, type: Time
+
   field :cost_per_hour, type: String
+  field :billing_resource, type: String
 
   validates :custom_id, :type, :region, :state, :monitoring, :network, presence: true
   validates :memory_gb,
