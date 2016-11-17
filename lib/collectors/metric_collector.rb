@@ -13,12 +13,13 @@ class MetricCollector
 
   def collect
     inventory = Inventory.where(synchronized: true).first
-    abort('No synchronized inventory found, abort task') unless inventory
+    return false unless inventory
 
     set_time_options(inventory)
 
     inventory.hosts.each { |host| collect_samples(host) }
     inventory.update_attributes(last_collected_metrics_time: @options[:end_time])
+    true
   end
 
   private
@@ -28,7 +29,7 @@ class MetricCollector
     start_time = inventory.last_collected_metrics_time
     start_time ||= last_sent_metrics_time(inventory)
     start_time ||= Time.now - interval
-    end_time ||= start_time + interval
+    end_time = start_time + interval
 
     puts "Collecting samples for period #{start_time} -> #{end_time}"
 
@@ -39,7 +40,7 @@ class MetricCollector
   def last_sent_metrics_time(inventory)
     meter_response = MeterHttpClient.new.get_infrastructure(inventory.custom_id)
     time = meter_response['hosts']&.first&.send(:[], 'last_sent_metrics_time')
-    Time.parse(host['last_sent_metrics_time']) if time
+    Time.parse(time) if time
   end
 
   def collect_samples(host)
