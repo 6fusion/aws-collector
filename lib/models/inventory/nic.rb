@@ -6,7 +6,6 @@ class Nic
   field :custom_id, type: String
   field :name, type: String
   field :state, type: String
-  field :status, type: String, default: :active
 
   field :tags, type: Hash, default: {}
 
@@ -17,7 +16,7 @@ class Nic
       custom_id: custom_id,
       name: name,
       state: state,
-      status: status,
+      status: "connected",
       tags: tags&.join || []
     }
   end
@@ -26,8 +25,13 @@ class Nic
     {
       custom_id: custom_id,
       name: name,
-      status: status,
+      status: "connected",
       kind: :WAN
     }
+  end
+
+  def different_from_old?(old_nic)
+    json = to_payload
+    [:custom_id, :name, :status].any? { |key| json[key] != old_nic[key] }
   end
 end

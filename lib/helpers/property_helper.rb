@@ -1,5 +1,9 @@
 module PropertyHelper
 
+  def self.infrastructure_id
+    read_property("INFRASTRUCTURE_ID")
+  end
+
   def self.organization_id
     read_property("ORGANIZATION_ID")
   end
