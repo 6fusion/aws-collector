@@ -8,6 +8,9 @@ module AWS
     def self.fetch
       detailed_report_prefix = PropertyHelper.detailed_report_prefix
       detailed_report_bucket = PropertyHelper.detailed_report_bucket
+
+      return unless detailed_report_prefix && detailed_report_bucket
+
       report_manifest_key = "/#{detailed_report_prefix}/#{date_range}/#{detailed_report_prefix}-Manifest.json"
 
       puts "Retrieving detailed report manifest from: #{report_manifest_key}"
