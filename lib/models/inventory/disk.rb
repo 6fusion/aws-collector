@@ -13,7 +13,6 @@ class Disk
   field :iops, type: Integer
 
   field :state, type: String
-  field :status, type: String, default: :active
   field :tags, type: Hash, default: {}
 
   field :cost_per_hour, type: String
@@ -32,7 +31,7 @@ class Disk
       storage_bytes: bytes,
       iops: iops,
       state: state,
-      status: status,
+      status: "connected",
       tags: tags&.join || [],
       cost_per_hour: cost
     }
@@ -42,7 +41,7 @@ class Disk
     {
       custom_id: custom_id,
       name: name,
-      status: status,
+      status: "connected",
       storage_bytes: bytes
     }
   end
@@ -53,5 +52,10 @@ class Disk
 
   def cost
     (cost_per_hour || 0).to_f
+  end
+
+  def different_from_old?(old_disk)
+    json = to_payload
+    json.keys.any? { |key| json[key] != old_disk[key] }
   end
 end

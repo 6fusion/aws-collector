@@ -23,6 +23,30 @@ class MeterHttpClient
                   body: payload.to_json)
   end
 
+  def create_disk(machine_id, payload)
+    send_to_meter(method: :post,
+                  endpoint: "/api/v1/machines/#{machine_id}/disks.json",
+                  body: payload.to_json)
+  end
+
+  def update_disk(disk_id, payload)
+    send_to_meter(method: :patch,
+                  endpoint: "/api/v1/disks/#{disk_id}.json",
+                  body: payload.to_json)
+  end
+
+  def create_nic(machine_id, payload)
+    send_to_meter(method: :post,
+                  endpoint: "/api/v1/machines/#{machine_id}/nics.json",
+                  body: payload.to_json)
+  end
+
+  def update_nic(nic_id, payload)
+    send_to_meter(method: :patch,
+                  endpoint: "/api/v1/nics/#{nic_id}.json",
+                  body: payload.to_json)
+  end
+
   def infrastructures(organization_id)
     send_to_meter(method: :get,
                   endpoint: "/api/v1/infrastructures.json",

@@ -2,7 +2,7 @@ class InventoryConnector
   def initialize
     @meter_client = MeterHttpClient.new
     @organization_id = PropertyHelper.organization_id
-    @infrastructure_id = AWSHelper::Clients.iam_userid
+    @infrastructure_id = PropertyHelper.infrastructure_id || AWSHelper::Clients.iam_userid
   end
 
   def check_organization_exist
@@ -26,7 +26,41 @@ class InventoryConnector
 
   def delete_host(machine_id, payload)
     payload[:status] = :deleted
+    patch_host(machine_id, payload)
+  end
+
+  def patch_host(machine_id, payload)
+    payload.delete(:disks)
+    payload.delete(:nics)
     @meter_client.update_machine(machine_id, payload)
+  end
+
+  def create_disk(machine_id, disk)
+    payload = disk.to_payload
+    @meter_client.create_disk(machine_id, payload)
+  end
+
+  def delete_disk(disk_id, payload)
+    payload[:status] = :deleted
+    patch_disk(disk_id, payload)
+  end
+
+  def patch_disk(disk_id, payload)
+    @meter_client.update_disk(disk_id, payload)
+  end
+
+  def create_nic(machine_id, nic)
+    payload = nic.to_payload
+    @meter_client.create_nic(machine_id, payload)
+  end
+
+  def delete_nic(nic_id, payload)
+    payload[:status] = :deleted
+    patch_nic(nic_id, payload)
+  end
+
+  def patch_nic(nic_id, payload)
+    @meter_client.update_nic(nic_id, payload)
   end
 
   def infrastructure_exist?
