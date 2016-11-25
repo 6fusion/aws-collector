@@ -1,5 +1,6 @@
 desc 'Starting metric collector'
 
 task :collect_samples do
-  MetricCollector.new.collect
+  result = MetricCollector.new.collect
+  puts "No inventory found, cant collect metrics" unless result
 end

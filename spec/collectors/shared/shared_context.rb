@@ -3,6 +3,7 @@ require 'aws-sdk'
 RSpec.shared_context 'shared collectors context' do
   let(:ec2_client) { double }
   let(:cw_client) { double }
+  let(:meter_client) { double }
   let(:resource) { double }
   let(:region) { double(region_name: 'us-west-2') }
   let(:instance) {
@@ -17,8 +18,8 @@ RSpec.shared_context 'shared collectors context' do
   before(:each) do
     allow(Aws::EC2::Client).to receive(:new).and_return(ec2_client)
     allow(ec2_client).to receive_message_chain(:describe_regions, :data, :regions).and_return([region])
-    allow(Aws::EC2::Resource).to receive(:new).with(region: region.region_name).and_return(resource)
+    allow(Aws::EC2::Resource).to receive(:new).and_return(resource)
     allow(resource).to receive_message_chain(:instances, :entries).and_return([instance])
-    allow(Aws::CloudWatch::Client).to receive(:new).with(region: region.region_name).and_return(cw_client)
+    allow(Aws::CloudWatch::Client).to receive(:new).and_return(cw_client)
   end
 end
