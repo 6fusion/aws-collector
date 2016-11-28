@@ -9,7 +9,7 @@ class Inventory
 
   field :name, type: String, default: AWSHelper::Clients.iam_username
   field :tags, type: Array, default: []
-  field :custom_id, type: String, default: PropertyHelper.infrastructure_id || AWSHelper::Clients.iam_userid
+  field :custom_id, type: String, default: AWSHelper::Clients.iam_userid
   field :synchronized, type: Boolean, default: true
   field :last_collected_metrics_time, type: Time
 
