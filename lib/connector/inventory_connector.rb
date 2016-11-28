@@ -2,7 +2,7 @@ class InventoryConnector
   def initialize
     @meter_client = MeterHttpClient.new
     @organization_id = PropertyHelper.organization_id
-    @infrastructure_id = PropertyHelper.infrastructure_id || AWSHelper::Clients.iam_userid
+    @infrastructure_id = AWSHelper::Clients.iam_userid
   end
 
   def check_organization_exist
