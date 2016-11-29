@@ -84,7 +84,11 @@ class MeterHttpClient
   private
 
   def send_to_meter(options)
-    self.class.base_uri(PropertyHelper.use_ssl ? "https://" : "http://" + PropertyHelper.host)
+    host = PropertyHelper.use_ssl ? "https://" : "http://" + PropertyHelper.meter_host
+    port = PropertyHelper.meter_port
+    host = port&.empty? ? host : "#{host}:#{port}"
+
+    self.class.base_uri(host)
 
     req_options = {
         query: query_with_token(options),

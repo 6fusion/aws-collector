@@ -54,9 +54,9 @@ class MetricCollector
   end
 
   def collect_machine(custom_id, region, platform)
-    memory_namespace = platform ? 'Windows/Default' : 'System/Linux'
+    memory_namespace = platform == 'Linux' ? 'System/Linux' : 'Windows/Default'
     cpu_options = ec2_options('CPUUtilization', custom_id)
-    memory_options = ec2_options('Memory', custom_id, memory_namespace)
+    memory_options = ec2_options('MemoryUtilization', custom_id, memory_namespace)
     {
         id: custom_id,
         cpu_usage: datapoints(region, cpu_options),

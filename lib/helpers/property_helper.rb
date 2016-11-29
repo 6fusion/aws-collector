@@ -28,8 +28,20 @@ module PropertyHelper
     read_property("TOKEN")
   end
 
-  def self.host
-    read_property("HOST")
+  def self.meter_host
+    read_property("METER_HOST")
+  end
+
+  def self.meter_port
+    read_property("METER_PORT")
+  end
+
+  def self.mongo_host
+    read_property("MONGO_HOST")
+  end
+
+  def self.mongo_port
+    read_property("MONGO_PORT")
   end
 
   def self.verify_ssl
@@ -42,8 +54,9 @@ module PropertyHelper
 
   def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
-    Base64.decode64(ENV[name].to_s) || read_secret_property(path) ||
+    property = Base64.decode64(ENV[name].to_s) || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
+    property&.empty? ? nil : property
   end
 
   private
