@@ -62,6 +62,7 @@ class Host
       name: name,
       cpu_count: cpu.cores,
       cpu_speed_hz: cpu.speed_hz,
+      memory_bytes: memory_bytes,
       tags: tags&.join || [],
       status: status,
       disks: disks.map(&:to_payload),

@@ -12,7 +12,7 @@ class MetricCollector
   end
 
   def collect
-    inventory = Inventory.where(synchronized: true).first
+    inventory = Inventory.first
     return false unless inventory
 
     set_time_options(inventory)

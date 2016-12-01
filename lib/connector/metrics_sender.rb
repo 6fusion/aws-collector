@@ -36,6 +36,6 @@ class MetricsSender
   end
 
   def synced_inventory
-    Inventory.where(synchronized: true).first
+    Inventory.first
   end
 end
