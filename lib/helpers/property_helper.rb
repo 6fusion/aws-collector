@@ -54,9 +54,8 @@ module PropertyHelper
 
   def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
-    property = Base64.decode64(ENV[name].to_s) || read_secret_property(path) ||
+    Base64.decode64(ENV[name].to_s) || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
-    property&.empty? ? nil : property
   end
 
   private
