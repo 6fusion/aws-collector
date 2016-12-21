@@ -8,8 +8,6 @@ data:
   aws_secret_key: "BASE64_VALUE"          # Amazon secret key
   detailed_report_bucket: "BASE64_VALUE"  # Amazon S3 bucket name where detailed billing reports are stored(if any)
   detailed_report_prefix: "BASE64_VALUE"  # Amazon detailed report name (report path)
-  mongo_host: "BASE64_VALUE"              # MongoDB host (host of MongoDB which can be deployed on separate container)
-  mongo_port: "BASE64_VALUE"              # MongoDB port
 ---
 apiVersion: v1
 kind: Secret

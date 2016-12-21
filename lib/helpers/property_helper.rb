@@ -37,11 +37,11 @@ module PropertyHelper
   end
 
   def self.mongo_host
-    read_property("MONGO_HOST")
+    read_property("MONGO_SERVICE_HOST")
   end
 
   def self.mongo_port
-    read_property("MONGO_PORT")
+    read_property("MONGO_SERVICE_PORT")
   end
 
   def self.verify_ssl
@@ -54,7 +54,7 @@ module PropertyHelper
 
   def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
-    Base64.decode64(ENV[name].to_s) || read_secret_property(path) ||
+    ENV[name].to_s || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
   end
 
