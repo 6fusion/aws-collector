@@ -45,11 +45,11 @@ module PropertyHelper
   end
 
   def self.verify_ssl
-    read_property("VERIFY-SSL") == "1"
+    read_property("VERIFY_SSL") == "1"
   end
 
   def self.use_ssl
-    read_property("USE-SSL") == "1"
+    read_property("USE_SSL") == "1"
   end
 
   def self.read_property(path, default = nil)

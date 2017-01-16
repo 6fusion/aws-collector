@@ -13,7 +13,7 @@ class Disk
   field :iops, type: Integer
 
   field :state, type: String
-  field :tags, type: Hash, default: {}
+  field :tags, type: Array, default: []
 
   field :cost_per_hour, type: String
   field :billing_resource, type: String
@@ -32,7 +32,7 @@ class Disk
       iops: iops,
       state: state,
       status: "connected",
-      tags: tags&.join || [],
+      tags: tags,
       cost_per_hour: cost
     }
   end
