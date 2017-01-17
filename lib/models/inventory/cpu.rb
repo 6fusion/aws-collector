@@ -25,6 +25,6 @@ class Cpu
   private
 
   def ghz_to_hz(ghz)
-    ghz * 1000_000_000.0
+    (ghz * 1000_000_000).to_i
   end
 end
