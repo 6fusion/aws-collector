@@ -47,7 +47,7 @@ class Disk
   end
 
   def bytes
-    size_gib * 1_073_741_824.0
+    (size_gib * 1_073_741_824).round
   end
 
   def cost
