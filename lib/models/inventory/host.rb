@@ -13,7 +13,7 @@ class Host
   field :status, type: String, default: :active
   field :monitoring, type: String
 
-  field :memory_gb, type: Float
+  field :memory_gb, type: Integer
   field :network, type: String
   field :platform, type: String
 
@@ -79,7 +79,7 @@ class Host
   end
 
   def memory_bytes
-    memory_gb * 1024.0 * 1024.0 * 1024.0
+    memory_gb * 1024 * 1024 * 1024
   end
 
   def different_from_old?(old_host)
