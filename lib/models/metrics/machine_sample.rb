@@ -17,7 +17,7 @@ class MachineSample
     {
       id: custom_id,
       cpu_usage_percent: cpu_usage_percent,
-      memory_bytes: memory_megabytes
+      memory_bytes: memory_megabytes.megabytes
     }
   end
 end
