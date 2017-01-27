@@ -25,8 +25,7 @@ class InventoryConnector
   end
 
   def delete_host(machine_id, payload)
-    payload[:status] = :deleted
-    patch_host(machine_id, payload)
+    patch_host(machine_id, {status: :deleted})
   end
 
   def patch_host(machine_id, payload)
