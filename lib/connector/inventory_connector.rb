@@ -21,6 +21,9 @@ class InventoryConnector
 
   def create_host(host)
     payload = host.to_payload
+    if payload[:name].empty?
+      payload[:name] = payload[:custom_id]
+    end
     @meter_client.create_machine(@infrastructure_id, payload)
   end
 
@@ -31,6 +34,9 @@ class InventoryConnector
   def patch_host(machine_id, payload)
     payload.delete(:disks)
     payload.delete(:nics)
+    if payload[:name].empty?
+      payload.delete(:name)
+    end
     @meter_client.update_machine(machine_id, payload)
   end
 
