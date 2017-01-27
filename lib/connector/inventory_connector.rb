@@ -21,6 +21,7 @@ class InventoryConnector
 
   def create_host(host)
     payload = host.to_payload
+    # If name tag is missing, set name to custom_id (aka instance ID)
     if payload[:name].empty?
       payload[:name] = payload[:custom_id]
     end
@@ -34,6 +35,7 @@ class InventoryConnector
   def patch_host(machine_id, payload)
     payload.delete(:disks)
     payload.delete(:nics)
+    # Do not update machine names to be "blank"
     if payload[:name].empty?
       payload.delete(:name)
     end

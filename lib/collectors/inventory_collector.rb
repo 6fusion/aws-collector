@@ -76,7 +76,7 @@ class InventoryCollector
 
     Host.new(
       custom_id: instance_id,
-      name: name_from_tags(instance.tags)
+      name: name_from_tags(instance.tags),
       type: type,
       region: instance.client.config.region,
       tags: tags_to_array(instance.tags),
