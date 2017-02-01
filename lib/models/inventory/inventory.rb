@@ -37,7 +37,7 @@ class Inventory
 
     defaulted_networks = missing_networks.map{|kind| Nic.new(name: "default_#{kind}", custom_id: "default_#{kind}", state: "active") }
 
-    (defaulted_networks + networks).map(&:infrastructure_json))
+    (defaulted_networks + networks).map(&:infrastructure_json)
   end
 
 
