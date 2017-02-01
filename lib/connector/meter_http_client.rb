@@ -84,7 +84,7 @@ class MeterHttpClient
   private
 
   def send_to_meter(options)
-    host = PropertyHelper.use_ssl ? "https://" : "http://" + PropertyHelper.meter_host
+    host = (PropertyHelper.use_ssl ? "https://" : "http://") + PropertyHelper.meter_host
     port = PropertyHelper.meter_port
     host = port&.empty? ? host : "#{host}:#{port}"
 

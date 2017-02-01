@@ -21,17 +21,24 @@ class InventoryConnector
 
   def create_host(host)
     payload = host.to_payload
+    # If name tag is missing, set name to custom_id (aka instance ID)
+    if payload[:name].empty?
+      payload[:name] = payload[:custom_id]
+    end
     @meter_client.create_machine(@infrastructure_id, payload)
   end
 
   def delete_host(machine_id, payload)
-    payload[:status] = :deleted
-    patch_host(machine_id, payload)
+    patch_host(machine_id, {status: :deleted})
   end
 
   def patch_host(machine_id, payload)
     payload.delete(:disks)
     payload.delete(:nics)
+    # Do not update machine names to be "blank"
+    if payload[:name].empty?
+      payload.delete(:name)
+    end
     @meter_client.update_machine(machine_id, payload)
   end
 

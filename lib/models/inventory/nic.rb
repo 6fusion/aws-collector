@@ -7,7 +7,7 @@ class Nic
   field :name, type: String
   field :state, type: String
 
-  field :tags, type: Hash, default: {}
+  field :tags, type: Array, default: []
 
   validates :custom_id, presence: true
 
@@ -17,7 +17,7 @@ class Nic
       name: name,
       state: state,
       status: "connected",
-      tags: tags&.join || []
+      tags: tags
     }
   end
 

@@ -48,8 +48,13 @@ class InventoryCollector
   def host_model(instance)
     type = instance.instance_type
     instance_id = instance.instance_id
-    tags = tags_to_map(instance.tags).to_dot
+    hardware = nil
+    begin
     hardware = INSTANCE_TYPES[type].to_dot
+    rescue StandardError => e
+      puts "TYPE triggering exception: #{type}"
+      puts e
+    end
 
     disks = instance.volumes.map { |volume| disk_model(volume) }
     disks << instance_disk_model(instance) if instance_disk_model(instance)
@@ -71,10 +76,10 @@ class InventoryCollector
 
     Host.new(
       custom_id: instance_id,
-      name: tags["Name"] || instance.instance_id,
+      name: name_from_tags(instance.tags),
       type: type,
       region: instance.client.config.region,
-      tags: tags,
+      tags: tags_to_array(instance.tags),
       state: instance.state.name,
       monitoring: instance.monitoring.state,
       memory_gb: hardware.ram_gb,
@@ -100,17 +105,15 @@ class InventoryCollector
   end
 
   def nic_model(vpc)
-    tags = tags_to_map(vpc.tags)
     Nic.new(
       custom_id: vpc.id,
-      name: tags["Name"] || vpc.id,
+      name: name_from_tags(vpc.tags) || vpc.id,
       state: vpc.state,
-      tags: tags
+      tags: tags_to_array(vpc.tags)
     )
   end
 
   def disk_model(volume)
-    tags = tags_to_map(volume.tags)
     region = availability_zone_to_region(volume.availability_zone)
     volume_type = volume.volume_type
     price_details =
@@ -119,12 +122,12 @@ class InventoryCollector
 
     Disk.new(
       custom_id: volume.volume_id,
-      name: tags["Name"] || volume.volume_id,
+      name: name_from_tags(volume.tags) || volume.volume_id,
       type: volume_type,
       size_gib: volume.size,
       iops: volume.iops,
       state: volume.state,
-      tags: tags,
+      tags: tags_to_array(volume.tags),
       cost_per_hour: price_details.cost_per_hour,
       billing_resource: price_details.billing_resource
     )
@@ -174,8 +177,11 @@ class InventoryCollector
     Clients.ec2.describe_regions.data.regions.map(&:region_name)
   end
 
-  def tags_to_map(tags)
-    Hash[ tags.map { |tag| [tag.key, tag.value] } ]
+  def tags_to_array(tags)
+    tags.map{|tag| "#{tag.key}:#{tag.value}"}
+  end
+  def name_from_tags(tags)
+    tags.find{|tag| tag.key.match(/\Aname\z/i)}&.value
   end
 
   def availability_zone_to_region(availability_zone)

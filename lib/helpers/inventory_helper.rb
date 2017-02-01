@@ -5,6 +5,8 @@ module InventoryHelper
     "t2.small" => { cores: 1, cpu_speed_ghz: "up to 3.3", ram_gb: 2, network: "low to moderate" },
     "t2.medium" => { cores: 2, cpu_speed_ghz: "up to 3.3", ram_gb: 4, network: "low to moderate" },
     "t2.large" => { cores: 2, cpu_speed_ghz: "up to 3.0", ram_gb: 8, network: "low to moderate" },
+    "t2.xlarge" => { cores: 4, cpu_speed_ghz: "up to 3.0", ram_gb: 16, network: "low to moderate" },
+    "t2.2xlarge" => { cores: 8, cpu_speed_ghz: "up to 3.0", ram_gb: 32, network: "low to moderate" },
     "m4.large" => { cores: 2, cpu_speed_ghz: "2.4", ram_gb: 8, network: "moderate" },
     "m4.xlarge" => { cores: 4, cpu_speed_ghz: "2.4", ram_gb: 16, network: "high" },
     "m4.2xlarge" => { cores: 8, cpu_speed_ghz: "2.4", ram_gb: 32, network: "high" },

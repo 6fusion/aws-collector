@@ -7,13 +7,13 @@ class Host
   field :name, type: String
   field :type, type: String
   field :region, type: String
-  field :tags, type: Hash
+  field :tags, type: Array, default: []
 
   field :state, type: String
   field :status, type: String, default: :active
   field :monitoring, type: String
 
-  field :memory_gb, type: Float
+  field :memory_gb, type: Integer
   field :network, type: String
   field :platform, type: String
 
@@ -38,7 +38,7 @@ class Host
       name: name,
       type: type,
       region: region,
-      tags: tags&.join || [],
+      tags: tags,
       state: state,
       status: status,
       monitoring: monitoring,
@@ -63,7 +63,7 @@ class Host
       cpu_count: cpu.cores,
       cpu_speed_hz: cpu.speed_hz,
       memory_bytes: memory_bytes,
-      tags: tags&.join || [],
+      tags: tags,
       status: status,
       disks: disks.map(&:to_payload),
       nics: nics.map(&:to_payload)
@@ -79,7 +79,7 @@ class Host
   end
 
   def memory_bytes
-    memory_gb * 1024.0 * 1024.0 * 1024.0
+    memory_gb * 1024 * 1024 * 1024
   end
 
   def different_from_old?(old_host)
