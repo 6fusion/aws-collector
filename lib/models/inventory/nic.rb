@@ -6,12 +6,14 @@ class Nic
   field :custom_id, type: String
   field :name, type: String
   field :state, type: String
+  field :kind, type: String, default: "LAN"
 
   field :tags, type: Array, default: []
 
   validates :custom_id, presence: true
 
-  def infrastructure_json(kind=:LAN)
+  def infrastructure_json
+    puts "default lan IO: #{PropertyHelper.default_lan_io}"
     {
       custom_id: custom_id,
       name: name,
@@ -19,7 +21,7 @@ class Nic
       status: "connected",
       tags: tags,
       kind: kind,
-      speed_bits_per_second: kind.eql?(:LAN) ? PropertyHelper.default_lan_io : PropertyHelper.default_wan_io
+      speed_bits_per_second: kind.eql?('LAN') ? PropertyHelper.default_lan_io : PropertyHelper.default_wan_io
     }
   end
 
@@ -28,7 +30,7 @@ class Nic
       custom_id: custom_id,
       name: name,
       status: "connected",
-      kind: :LAN
+      kind: "LAN"
     }
   end
 

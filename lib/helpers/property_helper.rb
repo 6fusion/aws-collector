@@ -53,6 +53,7 @@ module PropertyHelper
   end
 
   def self.default_disk_io
+puts "Default disk IO: #{read_property("DEFAULT_DISK_IO", 2e+9) }"
     read_property("DEFAULT_DISK_IO", 2e+9)
   end
 
