@@ -33,18 +33,9 @@ class Inventory
   end
 
   def networks_with_defaults
-    puts "NETWORKS"
-    p networks
-    missing_networks = ['WAN', 'LAN'].reject{|kind|
-      networks.find{|network|
-        puts "Comparing #{kind} to #{network.kind}"
-        network.kind.eql?(kind) } }
-
-    defaulted_networks = missing_networks.map{|kind|
-      puts ">>>>>Injecting #{kind} network"
-      Nic.new(name: "default_#{kind}", custom_id: "default_#{kind}", state: "active", kind: kind) }
-
-    (defaulted_networks + networks).map(&:infrastructure_json)
+    # currently, WAN will always be missing, so we'll always just cram it in
+    wan_network = Nic.new(name: "default_#{kind}", custom_id: "default_#{kind}", state: "active", kind: 'WAN')
+    (networks | [wan_network]).map(&:infrastructure_json)
   end
 
 

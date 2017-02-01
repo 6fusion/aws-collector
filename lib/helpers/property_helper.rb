@@ -53,7 +53,6 @@ module PropertyHelper
   end
 
   def self.default_disk_io
-p "Default disk IO: #{read_property('DEFAULT_DISK_IO', '2000000000').nil? } #{read_property('DEFAULT_DISK_IO', '2000000000').empty? } #{read_property('DEFAULT_DISK_IO', '2000000000') }"
     read_property("DEFAULT_DISK_IO", "2000000000")
   end
 
@@ -66,9 +65,9 @@ p "Default disk IO: #{read_property('DEFAULT_DISK_IO', '2000000000').nil? } #{re
   end
 
 
-  def self.read_property(path, default = nil)
+  def self.read_property(pathu, default = nil)
     name = path.split("/").last.upcase
-    ENV[name].to_s || read_secret_property(path) ||
+    ENV[name] || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
   end
 

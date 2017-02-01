@@ -13,7 +13,6 @@ class Nic
   validates :custom_id, presence: true
 
   def infrastructure_json
-    puts "default lan IO: #{PropertyHelper.default_lan_io}"
     {
       custom_id: custom_id,
       name: name,
