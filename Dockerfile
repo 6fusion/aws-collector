@@ -1,3 +1,3 @@
-FROM ruby:2.3-onbuild
+FROM ruby:2.3-alpine
 
 CMD rake start;
