@@ -35,6 +35,7 @@ class Disk
       tags: tags,
       cost_per_hour: cost,
       speed_bits_per_second: PropertyHelper.default_disk_io.to_i
+      cost_per_hour: cost
     }
   end
 

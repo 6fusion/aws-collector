@@ -7,7 +7,7 @@ class Host
   field :name, type: String
   field :type, type: String
   field :region, type: String
-  field :tags, type: Array, default: []
+  field :tags, type: Array, default: ['platform:aws', 'collector:aws']
 
   field :state, type: String
   field :status, type: String, default: :active
@@ -21,6 +21,8 @@ class Host
 
   field :cost_per_hour, type: String
   field :billing_resource, type: String
+
+  field :device_mappings, type: Hash
 
   validates :custom_id, :type, :region, :state, :monitoring, :network, presence: true
   validates :memory_gb,
@@ -68,6 +70,10 @@ class Host
       disks: disks.map(&:to_payload),
       nics: nics.map(&:to_payload)
     }
+  end
+
+  def get_disk_by_id(id)
+    disks.map.find { |disk| disk.custom_id == id }
   end
 
   def total_cost

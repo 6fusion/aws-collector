@@ -48,8 +48,10 @@ class MetricCollector
     region = host.region
     platform = host.platform
 
-    save(machine: collect_machine(custom_id, region, platform),
+    save(host,
+         machine: collect_machine(custom_id, region, platform),
          nics: collect_nics(custom_id, region),
+         disk_usage: collect_disk_space_available(custom_id, region),
          disks: collect_disks(host))
   end
 
@@ -62,6 +64,14 @@ class MetricCollector
         cpu_usage: datapoints(region, cpu_options),
         memory_megabytes: datapoints(region, memory_options)
     }
+  end
+
+  def collect_disk_space_available(custom_id, region)
+    disk_usage = linux_fs_dimensions(custom_id, region).collect do |dimension|
+      options = disk_space_available_options(custom_id, dimension, region)
+      [dimension, datapoints(region, options)]
+    end
+    Hash[disk_usage]
   end
 
   def collect_nics(custom_id, region)
@@ -102,10 +112,9 @@ class MetricCollector
     }
   end
 
-  def save(samples)
+  def save(host, samples)
     machine = samples[:machine]
     nics = samples[:nics]
-    disks = samples[:disks]
 
     cpu_usage = machine[:cpu_usage]
     memory_megabytes = machine[:memory_megabytes]
@@ -123,14 +132,7 @@ class MetricCollector
                         receive_bytes_per_second: network_in[time],
                         transmit_bytes_per_second: network_out[time])
 
-      disk_sample = disks.collect do |disk|
-        DiskSample.new(
-            custom_id: disk[:id],
-            usage_bytes: 0, #TODO gather this metric
-            read_bytes_per_second: disk[:read][time],
-            write_bytes_per_second: disk[:write][time]
-        )
-      end
+      disk_sample = disk_samples(host, samples, time)
 
       Sample.new(
           start_time: @options[:start_time],
@@ -142,12 +144,38 @@ class MetricCollector
     end
   end
 
+  def disk_samples(host, samples, time)
+    disks = samples[:disks]
+    disk_usage = samples[:disk_usage]
+
+    disks.collect do |disk|
+      space_available = nil
+      disk_id = disk[:id]
+
+      mapped_device = host.device_mappings.find { |x| x.last == disk[:id] }
+      if mapped_device
+        space_available = disk_usage.find do |key, value|
+          compare_block_device_names(key, mapped_device.first)
+        end
+        space_available = space_available.last[time] if space_available
+      end
+      usage_bytes = space_available.nil? ? 0 : host.get_disk_by_id(disk_id).bytes - space_available
+
+      DiskSample.new(
+        custom_id: disk_id,
+        usage_bytes: usage_bytes,
+        read_bytes_per_second: disk[:read][time],
+        write_bytes_per_second: disk[:write][time]
+      )
+    end
+  end
+
   def ec2_options(metric_name, custom_id, namespace='AWS/EC2')
     {
         dimensions: [name: 'InstanceId', value: custom_id],
         metric_name: metric_name,
         namespace: namespace
-    }.merge(@options)
+    }
   end
 
   def ebs_options(metric_name, custom_id)
@@ -155,10 +183,45 @@ class MetricCollector
         dimensions: [name: 'VolumeId', value: custom_id],
         metric_name: metric_name,
         namespace: 'AWS/EBS'
-    }.merge(@options)
+    }
+  end
+
+  def disk_space_available_options(custom_id, fs_dimension, region)
+    mount_path_dimensions = linux_mountpath_dimensions(custom_id, region).map do |dimension|
+      { name: 'MountPath', value: dimension }
+    end
+
+    {
+      dimensions: [
+        { name: 'InstanceId', value: custom_id },
+        { name: 'Filesystem', value: fs_dimension },
+      ] + mount_path_dimensions,
+      metric_name: "DiskSpaceAvailable",
+      namespace: "System/Linux"
+    }
+  end
+
+  def linux_fs_dimensions(custom_id, region)
+    linux_space_available_dimensions(custom_id, region, "Filesystem")
+  end
+
+  def linux_mountpath_dimensions(custom_id, region)
+    linux_space_available_dimensions(custom_id, region, "MountPath")
+  end
+
+  def linux_space_available_dimensions(custom_id, region, dimension)
+    client = Clients.cloud_watch(region)
+    metrics = client.list_metrics(
+      namespace: "System/Linux",
+      metric_name: "DiskSpaceAvailable",
+      dimensions: [name: 'InstanceId', value: custom_id]
+    )
+    metrics[0].collect { |metric| metric.dimensions.find_all { |t| t.name == dimension }.map(&:value) }.flatten.uniq
   end
 
   def datapoints(region, options)
+    options = options.merge(@options)
+
     client = Clients.cloud_watch(region)
     datapoints = client.get_metric_statistics(options).data.datapoints
 
@@ -169,5 +232,21 @@ class MetricCollector
     end
 
     Hash[values]
+  end
+
+  def compare_block_device_names(n1, n2)
+    n1_parts = n1.split("/")
+    n2_parts = n2.split("/")
+
+    return false if n1_parts.size != n2_parts.size
+    return false if n1_parts[0..-2] != n2_parts[0..-2]
+
+    n1_suffix = n1_parts[-1].sub(/[0-9]+/,'')
+    n2_suffix = n2_parts[-1].sub(/[0-9]+/,'')
+
+    return true if n1_suffix == n2_suffix
+    return true if n1_suffix == n2_suffix.gsub("xv", "s")
+    return true if n1_suffix == n2_suffix.gsub("s", "xv")
+    false
   end
 end
