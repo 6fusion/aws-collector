@@ -65,7 +65,7 @@ module PropertyHelper
   end
 
 
-  def self.read_property(pathu, default = nil)
+  def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
     ENV[name] || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
