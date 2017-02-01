@@ -34,7 +34,7 @@ class Inventory
 
   def networks_with_defaults
     # currently, WAN will always be missing, so we'll always just cram it in
-    wan_network = Nic.new(name: "default_#{kind}", custom_id: "default_#{kind}", state: "active", kind: 'WAN')
+    wan_network = Nic.new(name: "default_WAN", custom_id: "default_WAN", state: "active", kind: 'WAN')
     (networks | [wan_network]).map(&:infrastructure_json)
   end
 
