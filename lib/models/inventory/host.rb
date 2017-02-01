@@ -7,7 +7,7 @@ class Host
   field :name, type: String
   field :type, type: String
   field :region, type: String
-  field :tags, type: Array, default: ['platform:aws', 'collector:aws']
+  field :tags, type: Array, default: ['platform:aws', 'type:instance']
 
   field :state, type: String
   field :status, type: String, default: :active
