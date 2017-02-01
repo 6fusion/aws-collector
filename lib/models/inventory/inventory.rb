@@ -25,12 +25,22 @@ class Inventory
       cost_per_hour: total_cost,
       tags: tags,
       hosts: hosts.map(&:infrastructure_json) || [],
-      networks: networks.map(&:infrastructure_json) || [],
+      networks: networks_with_defaults,
       volumes: volumes.map(&:infrastructure_json) || [],
       status: :active
     }
     compact ? json.compact_recursive : json
   end
+
+  def networks_with_defaults
+    missing_networks = [:WAN, :LAN].reject{|kind| networks.find{|network| network.kind.eql?(kind) } }
+
+    defaults = missing_networks.each{|kind|
+      Nic.new(name: "default_#{kind}", custom_id: "default_#{kind}", state: "active").infrastructure_json(kind)}
+
+    defaults.join(networks.map(&:infrastructure_json))
+  end
+
 
   def total_cost
     hosts.sum(&:total_cost)

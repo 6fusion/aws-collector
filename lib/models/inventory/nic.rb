@@ -11,13 +11,15 @@ class Nic
 
   validates :custom_id, presence: true
 
-  def infrastructure_json
+  def infrastructure_json(kind=:LAN)
     {
       custom_id: custom_id,
       name: name,
       state: state,
       status: "connected",
-      tags: tags
+      tags: tags,
+      kind: kind
+      speed_bits_per_second: kind.eql?(:LAN) ? PropertyHelper.default_lan_io : PropertyHelper.default_wan_io
     }
   end
 
@@ -26,7 +28,7 @@ class Nic
       custom_id: custom_id,
       name: name,
       status: "connected",
-      kind: :WAN
+      kind: :LAN
     }
   end
 
