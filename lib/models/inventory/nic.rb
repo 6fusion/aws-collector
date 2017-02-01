@@ -20,7 +20,7 @@ class Nic
       status: "connected",
       tags: tags,
       kind: kind,
-      speed_bits_per_second: kind.eql?('LAN') ? PropertyHelper.default_lan_io : PropertyHelper.default_wan_io
+      speed_bits_per_second: kind.eql?('LAN') ? PropertyHelper.default_lan_io.to_i : PropertyHelper.default_wan_io.to_i
     }
   end
 

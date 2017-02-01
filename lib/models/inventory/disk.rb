@@ -34,7 +34,7 @@ class Disk
       status: "connected",
       tags: tags,
       cost_per_hour: cost,
-      speed_bits_per_second: PropertyHelper.default_disk_io
+      speed_bits_per_second: PropertyHelper.default_disk_io.to_i
     }
   end
 
