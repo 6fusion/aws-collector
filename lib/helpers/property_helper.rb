@@ -53,26 +53,21 @@ module PropertyHelper
   end
 
   def self.default_disk_io
-puts "Default disk IO: #{read_property("DEFAULT_DISK_IO", "2000000000") }"
+p "Default disk IO: #{read_property('DEFAULT_DISK_IO', '2000000000').nil? } #{read_property('DEFAULT_DISK_IO', '2000000000').empty? } #{read_property('DEFAULT_DISK_IO', '2000000000') }"
     read_property("DEFAULT_DISK_IO", "2000000000")
   end
 
   def self.default_wan_io
-    read_property("DEFAULT_WAN_IO", 4e+8)
+    read_property("DEFAULT_WAN_IO", "400000000")
   end
 
   def self.default_lan_io
-    read_property("DEFAULT_LAN_IO", 1e+10)
+    read_property("DEFAULT_LAN_IO", "10000000000")
   end
 
 
   def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
-    puts "read property"
-    p ENV[name].to_s
-    p read_secret_property(path)
-    p default
-    p "--------"
     ENV[name].to_s || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
   end

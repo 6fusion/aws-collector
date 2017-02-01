@@ -35,7 +35,10 @@ class Inventory
   def networks_with_defaults
     puts "NETWORKS"
     p networks
-    missing_networks = ['WAN', 'LAN'].reject{|kind| networks.find{|network| network.kind.eql?(kind) } }
+    missing_networks = ['WAN', 'LAN'].reject{|kind|
+      networks.find{|network|
+        puts "Comparing #{kind} to #{network.kind}"
+        network.kind.eql?(kind) } }
 
     defaulted_networks = missing_networks.map{|kind|
       puts ">>>>>Injecting #{kind} network"
