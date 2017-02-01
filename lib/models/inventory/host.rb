@@ -22,6 +22,8 @@ class Host
   field :cost_per_hour, type: String
   field :billing_resource, type: String
 
+  field :device_mappings, type: Hash
+
   validates :custom_id, :type, :region, :state, :monitoring, :network, presence: true
   validates :memory_gb,
             presence: true,
@@ -68,6 +70,10 @@ class Host
       disks: disks.map(&:to_payload),
       nics: nics.map(&:to_payload)
     }
+  end
+
+  def get_disk_by_id(id)
+    disks.map.find { |disk| disk.custom_id == id }
   end
 
   def total_cost
