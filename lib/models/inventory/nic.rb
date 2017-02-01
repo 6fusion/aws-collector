@@ -30,7 +30,7 @@ class Nic
       custom_id: custom_id,
       name: name,
       status: "connected",
-      kind: "LAN"
+      kind: kind
     }
   end
 
