@@ -159,7 +159,11 @@ class MetricCollector
         end
         space_available = space_available.last[time] if space_available
       end
-      usage_bytes = space_available.nil? ? 0 : host.get_disk_by_id(disk_id).bytes - space_available
+      usage_bytes = space_available.nil? ? 0 : disk_space_used(host.get_disk_by_id(disk_id), space_available)
+
+      if host.instance_store_disk&.custom_id == disk_id
+        usage_bytes = instance_store_usage_bytes(host, disk_usage, time)
+      end
 
       DiskSample.new(
         custom_id: disk_id,
@@ -168,6 +172,32 @@ class MetricCollector
         write_bytes_per_second: disk[:write][time]
       )
     end
+  end
+
+  def instance_store_usage_bytes(host, disk_usage, time)
+    disk = host.instance_store_disk
+
+    unmatched_disk_metrics = disk_usage.find_all do |mountpath, samples|
+      !find_device_mapping_by_mountpath(host, mountpath) && !samples.empty?
+    end
+    return if unmatched_disk_metrics.empty?
+
+    space_available = 0
+    unmatched_disk_metrics.each { |metric| space_available+= metric.last[time] }
+    disk_space_used(disk, space_available)
+  end
+
+  def disk_space_used(disk, available_db)
+    result = disk.bytes - gb_to_bytes(available_db)
+    result > 0 ? result : 0 # If script sends bytes instead of GBs - never write negatives
+  end
+
+  def gb_to_bytes(size_gib)
+    (size_gib * 1_073_741_824).round
+  end
+
+  def find_device_mapping_by_mountpath(host, mountpath)
+    host.device_mappings.find { |m| compare_block_device_names(m.first, mountpath) }
   end
 
   def ec2_options(metric_name, custom_id, namespace='AWS/EC2')

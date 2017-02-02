@@ -76,6 +76,10 @@ class Host
     disks.map.find { |disk| disk.custom_id == id }
   end
 
+  def instance_store_disk
+    disks.map.find { |disk| disk.type&.to_s == "instance_store" }
+  end
+
   def total_cost
     cost + disks.sum(&:cost)
   end
