@@ -8,6 +8,7 @@ class Inventory
   include PropertyHelper
 
   field :name, type: String, default: AWSHelper::Clients.iam_username
+  field :status, type: String, default: :Active
   field :tags, type: Array, default: ['platform:aws', 'collector:aws']
   field :custom_id, type: String, default: AWSHelper::Clients.iam_userid
   field :last_collected_metrics_time, type: Time
@@ -27,7 +28,7 @@ class Inventory
       hosts: hosts.map(&:infrastructure_json) || [],
       networks: networks_with_defaults,
       volumes: volumes.map(&:infrastructure_json) || [],
-      status: :active
+      status: status
     }
     compact ? json.compact_recursive : json
   end

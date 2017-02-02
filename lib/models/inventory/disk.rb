@@ -13,6 +13,7 @@ class Disk
   field :iops, type: Integer
 
   field :state, type: String
+  field :status, type: String, default: :Active
   field :tags, type: Array, default: []
 
   field :cost_per_hour, type: String
@@ -31,7 +32,7 @@ class Disk
       storage_bytes: bytes,
       iops: iops,
       state: state,
-      status: "connected",
+      status: status,
       tags: tags,
       speed_bits_per_second: PropertyHelper.default_disk_io.to_i,
       cost_per_hour: cost
@@ -42,7 +43,7 @@ class Disk
     {
       custom_id: custom_id,
       name: name,
-      status: "connected",
+      status: status,
       storage_bytes: bytes
     }
   end

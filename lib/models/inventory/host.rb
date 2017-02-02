@@ -10,7 +10,7 @@ class Host
   field :tags, type: Array, default: ['platform:aws', 'type:instance']
 
   field :state, type: String
-  field :status, type: String, default: :active
+  field :status, type: String, default: :poweredOn
   field :monitoring, type: String
 
   field :memory_gb, type: Integer
