@@ -7,10 +7,9 @@ class Host
   field :name, type: String
   field :type, type: String
   field :region, type: String
-  field :tags, type: Array, default: ['platform:aws', 'collector:aws']
+  field :tags, type: Array, default: ['platform:aws', 'type:instance']
 
   field :state, type: String
-  field :status, type: String, default: :active
   field :monitoring, type: String
 
   field :memory_gb, type: Integer
@@ -21,6 +20,8 @@ class Host
 
   field :cost_per_hour, type: String
   field :billing_resource, type: String
+
+  field :device_mappings, type: Hash
 
   validates :custom_id, :type, :region, :state, :monitoring, :network, presence: true
   validates :memory_gb,
@@ -70,6 +71,21 @@ class Host
     }
   end
 
+  def status
+    case state
+      when "running"
+          :poweredOn
+      when "terminated"
+          :deleted
+      else
+        :poweredOff
+    end
+  end
+
+  def get_disk_by_id(id)
+    disks.map.find { |disk| disk.custom_id == id }
+  end
+
   def total_cost
     cost + disks.sum(&:cost)
   end
@@ -84,8 +100,9 @@ class Host
 
   def different_from_old?(old_host)
     return true if type != old_host[:type]
-    json = to_payload
-    [:name, :tags, :status].any? { |key| json[key] != old_host[key] }
+    return true if status&.to_s != old_host[:status]&.to_s
+    json = to_payload.compact_recursive
+    [:name, :tags].any? { |key| json[key] != old_host[key] }
   end
 
   def compare_disks(old)

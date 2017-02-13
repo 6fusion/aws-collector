@@ -52,9 +52,22 @@ module PropertyHelper
     read_property("USE_SSL") == "1"
   end
 
+  def self.default_disk_io
+    read_property("DEFAULT_DISK_IO", "2000000000")
+  end
+
+  def self.default_wan_io
+    read_property("DEFAULT_WAN_IO", "400000000")
+  end
+
+  def self.default_lan_io
+    read_property("DEFAULT_LAN_IO", "10000000000")
+  end
+
+
   def self.read_property(path, default = nil)
     name = path.split("/").last.upcase
-    ENV[name].to_s || read_secret_property(path) ||
+    ENV[name] || read_secret_property(path) ||
       default || fail("Property with #{path} was not found")
   end
 

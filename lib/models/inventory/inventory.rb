@@ -8,6 +8,7 @@ class Inventory
   include PropertyHelper
 
   field :name, type: String, default: AWSHelper::Clients.iam_username
+  field :status, type: String, default: :Active
   field :tags, type: Array, default: ['platform:aws', 'collector:aws']
   field :custom_id, type: String, default: AWSHelper::Clients.iam_userid
   field :last_collected_metrics_time, type: Time
@@ -25,12 +26,19 @@ class Inventory
       cost_per_hour: total_cost,
       tags: tags,
       hosts: hosts.map(&:infrastructure_json) || [],
-      networks: networks.map(&:infrastructure_json) || [],
+      networks: networks_with_defaults,
       volumes: volumes.map(&:infrastructure_json) || [],
-      status: :active
+      status: status
     }
     compact ? json.compact_recursive : json
   end
+
+  def networks_with_defaults
+    # currently, WAN will always be missing, so we'll always just cram it in
+    wan_network = Nic.new(name: "default_WAN", custom_id: "default_WAN", state: "active", kind: 'WAN')
+    (networks | [wan_network]).map(&:infrastructure_json)
+  end
+
 
   def total_cost
     hosts.sum(&:total_cost)

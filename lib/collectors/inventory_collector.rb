@@ -62,6 +62,10 @@ class InventoryCollector
     nics = instance.network_interfaces.map { |network| network_model(network) }
     nics << instance_nic_model(instance)
 
+    device_mappings = Hash[*instance.block_device_mappings.map do |device|
+      [device.device_name, device.ebs.volume_id]
+    end.flatten]
+
     region = availability_zone_to_region(instance.placement.availability_zone)
     platform = instance.platform.nil? ? "Linux" : "Windows"
 
@@ -79,7 +83,7 @@ class InventoryCollector
       name: name_from_tags(instance.tags),
       type: type,
       region: instance.client.config.region,
-      tags: ['platform:aws', 'collector:aws'] + tags_to_array(instance.tags),
+      tags: ['platform:aws', 'type:instance'] + tags_to_array(instance.tags),
       state: instance.state.name,
       monitoring: instance.monitoring.state,
       memory_gb: hardware.ram_gb,
@@ -92,7 +96,8 @@ class InventoryCollector
       nics: nics,
       disks: disks,
       cost_per_hour: price_details.cost_per_hour,
-      billing_resource: price_details.billing_resource
+      billing_resource: price_details.billing_resource,
+      device_mappings: device_mappings
     )
   end
 
@@ -141,7 +146,7 @@ class InventoryCollector
       custom_id: "united_instance_store_of_instance_#{instance.instance_id}",
       name: "United instance store",
       type: :instance_store,
-      size_gib: store.size_gb,
+      size_gib: store.size_gb * store.quantity,
       instance_store_type: store.type,
       instance_stores_count: store.quantity
     )
@@ -174,7 +179,7 @@ class InventoryCollector
   end
 
   def regions
-    Clients.ec2.describe_regions.data.regions.map(&:region_name)
+    @regions ||= Clients.ec2.describe_regions.data.regions.map(&:region_name)
   end
 
   def tags_to_array(tags)

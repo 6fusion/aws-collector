@@ -6,6 +6,8 @@ class Nic
   field :custom_id, type: String
   field :name, type: String
   field :state, type: String
+  field :status, type: String, default: :Active
+  field :kind, type: String, default: "LAN"
 
   field :tags, type: Array, default: []
 
@@ -16,8 +18,10 @@ class Nic
       custom_id: custom_id,
       name: name,
       state: state,
-      status: "connected",
-      tags: tags
+      status: status,
+      tags: tags,
+      kind: kind,
+      speed_bits_per_second: kind.eql?('LAN') ? PropertyHelper.default_lan_io.to_i : PropertyHelper.default_wan_io.to_i
     }
   end
 
@@ -25,8 +29,8 @@ class Nic
     {
       custom_id: custom_id,
       name: name,
-      status: "connected",
-      kind: :WAN
+      status: status,
+      kind: kind
     }
   end
 
