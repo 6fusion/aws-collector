@@ -1,36 +1,41 @@
-require "aws_helper"
-require "zipruby"
+require 'aws_helper'
+require 'fastest-csv'
+require 'open3'
 
 module AWS
   module DetailedReport
     include AWSHelper
 
     def self.fetch
-      detailed_report_prefix = PropertyHelper.detailed_report_prefix
       detailed_report_bucket = PropertyHelper.detailed_report_bucket
 
-      return unless detailed_report_prefix && detailed_report_bucket
-
-      report_manifest_key = "/#{detailed_report_prefix}/#{date_range}/#{detailed_report_prefix}-Manifest.json"
-
-      puts "Retrieving detailed report manifest from: #{report_manifest_key}"
-
-      response = Clients.s3.get_object(bucket: detailed_report_bucket, key: report_manifest_key)
-      report_manifest = JSON(response.body.read)
-
-      bucket = report_manifest["bucket"]
-      key = report_manifest["reportKeys"].first
-
-      puts "Retrieving detailed report from bucket: #{bucket} | using key: #{key}"
-
-      report_zip = Clients.s3.get_object(bucket: bucket, key: key).body.read
-
-      Zip::Archive.open_buffer(report_zip) do |archive|
-        archive.fopen(archive.get_name(0)) do |file|
-          flush_reports if file
-          persist file.read
-        end
+      if  detailed_report_bucket.empty?
+        puts "Detailed billing information not provided; skipping"
+        return
       end
+
+      key = "#{billing_id}-aws-billing-detailed-line-items-with-resources-and-tags-#{Time.now.strftime('%Y-%m')}.csv.zip"
+      puts "Retrieving detailed report manifest at #{key}"
+
+      response = Clients.s3.get_object({bucket: detailed_report_bucket, key: key}, target: "/tmp/#{key}")
+      # TODO consider streaming straight to uncompression routine?
+      # https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
+
+      unzip_io = IO.popen("/usr/bin/funzip /tmp/#{key}", 'rb')
+      csv = FastestCSV.new(unzip_io)
+      flush_reports
+      persist csv
+
+    end
+
+    def self.billing_id
+      @@billing_id =
+        begin
+          detailed_report_bucket = PropertyHelper.detailed_report_bucket
+          response = Clients.s3.list_objects_v2(bucket: detailed_report_bucket)
+          key = response.contents.first.key
+          key.match(/(\d+)-/)[1]
+        end
     end
 
     def self.price_details(instance_id)
@@ -48,15 +53,19 @@ module AWS
 
     private
 
-    def self.persist(report_csv)
+    def self.persist(csv)
       puts "Saving new detailed report details to DB"
-      CSV.parse(report_csv, headers: true).each do |row|
-        ReportRow.new(resource_id: row["lineItem/ResourceId"],
-                      usage_type: row["lineItem/UsageType"],
-                      usage_start_date: row["lineItem/UsageStartDate"],
-                      usage_end_date: row["lineItem/UsageEndDate"],
-                      description: row["lineItem/LineItemDescription"],
-                      cost_per_hour: row["lineItem/BlendedCost"]).save!
+      headers = csv.shift
+      cost_index = headers.index('BlendedCost') || headers.index('Cost')
+      resource_index = headers.index('ResourceId')
+      usage_start_index = headers.index('UsageStartDate')
+      usage_type_index = headers.index('UsageType')
+
+      while row = csv.shift
+        ReportRow.new(resource_id:      row[resource_index],
+                      usage_type:       row[usage_type_index],
+                      usage_start_date: row[usage_start_index],
+                      cost_per_hour:    row[cost_index]).save!
       end
     end
 
@@ -65,11 +74,11 @@ module AWS
       ReportRow.destroy_all
     end
 
-    def self.date_range
-      beginning_of_month = Date.today.beginning_of_month.to_s.gsub("-", "")
-      beginning_of_next_month = Date.today.next_month.beginning_of_month.to_s.gsub("-", "")
+    # def self.date_range
+    #   beginning_of_month = Date.today.beginning_of_month.to_s.gsub("-", "")
+    #   beginning_of_next_month = Date.today.next_month.beginning_of_month.to_s.gsub("-", "")
 
-      "#{beginning_of_month}-#{beginning_of_next_month}"
-    end
+    #   "#{beginning_of_month}-#{beginning_of_next_month}"
+    # end
   end
 end

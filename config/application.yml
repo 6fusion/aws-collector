@@ -2,25 +2,25 @@ server:
   port: 8000
 
 startup:
+  - bootstrap_inventory
   - fetch_price
   - fetch_detailed_report
-  - collect_inventory
 
 scheduler:
   collect_inventory:
     rake_command: collect_inventory
-    interval: 15m
-    first_in: 15m
+    interval: 5m
+    first_in: 5m
 
   collect_samples:
     rake_command: collect_samples
-    interval: 5m
+    interval: 15m
     first_in: 0 # Immediately
 
   send_samples:
     rake_command: send_samples
-    interval: 15m
-    first_in: 15m
+    interval: 5m
+    first_in: 5m
 
   fetch_price:
     rake_command: fetch_price

@@ -1,34 +1,71 @@
 module AWSHelper
+
   module Clients
     def self.cloud_watch(region)
-      Aws::CloudWatch::Client.new(
+      @@cloud_watch ||=
+        Aws::CloudWatch::Client.new(
           region: region,
-          access_key_id: PropertyHelper.aws_access_key,
-          secret_access_key: PropertyHelper.aws_secret_key
-      )
+          credentials: AWSHelper::Identity.assume_role(:cloud_watch, region))
     end
 
-    def self.ec2(region = "us-east-1")
-      Aws::EC2::Client.new(
+    def self.ec2(region = PropertyHelper.aws_region)
+      @@ec2 ||=
+        Aws::EC2::Client.new(
+          region: region,
+          credentials: AWSHelper::Identity.assume_role(:ec2, region))
+    end
+
+    def self.s3(region = PropertyHelper.aws_region)
+      @@s3 ||=
+        Aws::S3::Client.new(
+          region: region,
+          credentials: AWSHelper::Identity.assume_role(:s3, region))
+    end
+
+  end
+
+  module Resources
+    def self.ec2(region)
+      Aws::EC2::Resource.new(
         region: region,
-        access_key_id: PropertyHelper.aws_access_key,
-        secret_access_key: PropertyHelper.aws_secret_key
-      )
+        credentials: AWSHelper::Identity.assume_role(:ec2, region))
+    end
+  end
+
+  module Identity
+    def self.assume_role(role, region)
+      role.eql?(:s3) ? billing_role : collection_role
     end
 
-    def self.s3(region = "us-east-1")
-      Aws::S3::Client.new(
-          region: region,
-          access_key_id: PropertyHelper.aws_access_key,
-          secret_access_key: PropertyHelper.aws_secret_key
-      )
+    def self.role_options
+      { access_key_id: PropertyHelper.aws_access_key,
+        secret_access_key: PropertyHelper.aws_secret_key,
+        role_session_name: 'aws-collector' }.merge( ENV['EXTERNAL_ID']&.empty? ? {} : { external_id: ENV['EXTERNAL_ID'] } )
+    end
+
+    def self.billing_role
+      @@billing_sts ||= Aws::AssumeRoleCredentials.new( role_options.merge({ role_arn: PropertyHelper.billing_arn }) )
+    end
+
+    def self.collection_role
+      @collection_sts ||= Aws::AssumeRoleCredentials.new( role_options.merge({ role_arn: PropertyHelper.collection_arn }) )
+    end
+
+    def self.account_id
+      begin
+        # If we have IAM access, just return the fields
+        "#{iam_userid}:#{iam_username}"
+      rescue Aws::IAM::Errors::AccessDenied => e
+        # If not, the exception message actually includes this information as well
+        md = e.message.match(%r|arn:aws:iam::(?<userid>\d+):[^\s]+/(?<username>[^\s]+) is not authorized|)
+        "#{md[:userid]}:#{md[:username]}"
+      end
     end
 
     def self.iam
       Aws::IAM::Client.new(
-          access_key_id: PropertyHelper.aws_access_key,
-          secret_access_key: PropertyHelper.aws_secret_key
-      )
+        access_key_id: PropertyHelper.aws_access_key,
+        secret_access_key: PropertyHelper.aws_secret_key)
     end
 
     def self.iam_username()
@@ -40,13 +77,5 @@ module AWSHelper
     end
   end
 
-  module Resources
-    def self.ec2(region)
-      Aws::EC2::Resource.new(
-          region: region,
-          access_key_id: PropertyHelper.aws_access_key,
-          secret_access_key: PropertyHelper.aws_secret_key
-      )
-    end
-  end
 end
+

@@ -1,9 +1,16 @@
 require "httparty"
+require 'uri'
+require 'logger'
 
 class MeterHttpClient
   include HTTParty
 
   headers content_type: "application/json"
+
+  def initialize
+    @logger = ::Logger.new(STDOUT)
+    @logger.level = ENV['LOG_LEVEL'] || 'info'
+  end
 
   def samples(payload)
     send_to_meter(method: :post,
@@ -12,12 +19,14 @@ class MeterHttpClient
   end
 
   def create_machine(infrastructure_id, payload)
+    @logger.debug { "Creating machine #{payload} under #{infrastructure_id}" }
     send_to_meter(method: :post,
-                  endpoint: "/api/v1/infrastructures/#{infrastructure_id}/machines.json",
+                  endpoint: URI.escape("/api/v1/infrastructures/#{infrastructure_id}/machines.json"),
                   body: payload.to_json)
   end
 
   def update_machine(machine_id, payload)
+    @logger.debug { "Updating machine #{payload} under #{infrastructure_id}" }
     send_to_meter(method: :patch,
                   endpoint: "/api/v1/machines/#{machine_id}.json",
                   body: payload.to_json)
@@ -56,30 +65,36 @@ class MeterHttpClient
 
   def post_infrastructure(payload, organization_id)
     send_to_meter(method: :post,
-                  endpoint: "/api/v1/organizations/#{organization_id}/infrastructures.json",
+                  endpoint: URI.escape("/api/v1/organizations/#{organization_id}/infrastructures.json"),
                   body: payload.to_json)
   end
 
   def get_infrastructure(infrastructure_id)
     send_to_meter(method: :get,
-                  endpoint: "/api/v1/infrastructures/#{infrastructure_id}.json")
+                  endpoint: URI.escape("/api/v1/infrastructures/#{infrastructure_id}.json"))
   end
 
   def update_infrastructure(payload, infrastructure_id)
     send_to_meter(method: :patch,
-                  endpoint: "/api/v1/infrastructures/#{infrastructure_id}.json",
+                  endpoint: URI.escape("/api/v1/infrastructures/#{infrastructure_id}.json"),
                   body: payload.to_json)
   end
 
   def delete_infrastructure(infrastructure_id)
     send_to_meter(method: :delete,
-                  endpoint: "/api/v1/infrastructures/#{infrastructure_id}.json")
+                  endpoint: URI.escape("/api/v1/infrastructures/#{infrastructure_id}.json"))
   end
 
   def get_organization(organization_id)
     send_to_meter(method: :get,
-                  endpoint: "/api/v1/organizations/#{organization_id}.json")
+                  endpoint: URI.escape("/api/v1/organizations/#{organization_id}.json"))
   end
+
+  def get_machine(machine_id)
+    send_to_meter(method: :get,
+                  endpoint: URI.escape("/api/v1/machines/#{machine_id}.json"))
+  end
+
 
   private
 
@@ -103,8 +118,8 @@ class MeterHttpClient
 
     response = self.class.send(options[:method], options[:endpoint], req_options)
 
-    response.success? || response.code == 404 ||
-        raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
+    response.success? || ((options[:method] != :post) and (response.code == 404)) ||
+      raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
     response
   end
 

@@ -2,6 +2,7 @@ desc 'Starting AWS collector'
 task :start do
   health_endpoint = HealthEndpoint.new
   scheduler = Scheduler.new
+  STDOUT.sync = true
 
   begin
     puts 'Waiting for Ctrl-C'

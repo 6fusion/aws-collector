@@ -1,6 +1,7 @@
 require 'inventory_helper'
 require 'aws_helper'
 require 'property_helper'
+require 'logger'
 
 class InventoryCollector
   include InventoryHelper
@@ -9,37 +10,43 @@ class InventoryCollector
   include AWS::PriceList
   include AWS::DetailedReport
 
+  def initialize
+    super
+    @logger = ::Logger.new(STDOUT)
+    @logger.level = ENV['LOG_LEVEL'] || 'info'
+  end
+
   def save!(inventory)
-    puts "Saving inventory into Mongo..."
+    @logger.info { "Saving inventory into Mongo..." }
     inventory.save!
     Inventory.all.each { |inv| inv.delete if inventory != inv }
-    puts "Inventory saved"
+    @logger.info { "Inventory saved" }
   end
 
   def current_inventory_json
     begin
-      puts "Trying to get the current inventory from MongoDB..."
+      @logger.info { "Trying to get the current inventory from MongoDB..." }
       inventory = Inventory.order_by(created_at: :desc).first
       return inventory.infrastructure_json if inventory
 
-      puts "Trying to get the current inventory from Meter..."
+      @logger.info { "Trying to get the current inventory from Meter..." }
       inventory = InventoryConnector.new.infrastructure_json
       return inventory.compact_recursive.symbolize_recursive if inventory
 
-      puts "Inventory does not exist yet on meter. Using a new one..."
+      @logger.info { "Inventory does not exist yet on meter. Using a new one..." }
       Inventory.new.infrastructure_json # new empty inventory
     end
   end
 
   def collect_inventory
-    puts "Collecting the actual inventory from AWS..."
+    @logger.info { "Collecting the actual inventory from AWS..." }
     inventory = Inventory.new(
       hosts: instances.map { |instance| host_model(instance) },
       volumes: volumes.map { |volume| disk_model(volume) },
       networks: vpcs.map { |vpc| nic_model(vpc) }
     )
 
-    puts "AWS inventory was collected"
+    @logger.info { "AWS inventory was collected" }
     inventory
   end
 
@@ -52,8 +59,8 @@ class InventoryCollector
     begin
     hardware = INSTANCE_TYPES[type].to_dot
     rescue StandardError => e
-      puts "TYPE triggering exception: #{type}"
-      puts e
+      @logger.error "TYPE triggering exception: #{type}"
+      @logger.error e
     end
 
     disks = instance.volumes.map { |volume| disk_model(volume) }
@@ -174,7 +181,9 @@ class InventoryCollector
 
   def instances
     regions.collect do |region|
-      Resources.ec2(region).instances.entries
+      instances = Resources.ec2(region).instances.entries
+      @logger.debug { "Collected instances from #{region}: #{instances}" }
+      instances
     end.compact.flatten
   end
 

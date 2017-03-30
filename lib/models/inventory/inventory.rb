@@ -7,10 +7,10 @@ class Inventory
   include Mongoid::Timestamps::Created
   include PropertyHelper
 
-  field :name, type: String, default: AWSHelper::Clients.iam_username
+  field :name, type: String, default: PropertyHelper.infrastructure_name
   field :status, type: String, default: :Active
   field :tags, type: Array, default: ['platform:aws', 'collector:aws']
-  field :custom_id, type: String, default: AWSHelper::Clients.iam_userid
+  field :custom_id, type: String, default: AWSHelper::Identity.account_id
   field :last_collected_metrics_time, type: Time
 
   validates :custom_id, :name, presence: true

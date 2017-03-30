@@ -1,8 +1,12 @@
+require 'logger'
+
 class InventoryConnector
   def initialize
     @meter_client = MeterHttpClient.new
     @organization_id = PropertyHelper.organization_id
-    @infrastructure_id = AWSHelper::Clients.iam_userid
+    @infrastructure_id = AWSHelper::Identity::account_id
+    @logger = ::Logger.new(STDOUT)
+    @logger.level = ENV['LOG_LEVEL'] || 'info'
   end
 
   def check_organization_exist
@@ -19,12 +23,18 @@ class InventoryConnector
     end
   end
 
+  def get_machine(host)
+    @meter_client.get_machine(host.custom_id)
+  end
+
   def create_host(host)
     payload = host.to_payload
+    @logger.debug "creating host #{host}"
     # If name tag is missing, set name to custom_id (aka instance ID)
-    if payload[:name].empty?
-      payload[:name] = payload[:custom_id]
-    end
+    payload[:name] ||= payload[:custom_id]
+    # if payload[:name].nil? or payload[:name].empty?
+    #   payload[:name] = payload[:custom_id]
+    # end
     @meter_client.create_machine(@infrastructure_id, payload)
   end
 

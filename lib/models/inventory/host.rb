@@ -101,6 +101,10 @@ class Host
   def memory_bytes
     memory_gb * 1024 * 1024 * 1024
   end
+  def memory_mb
+    memory_gb * 1024
+  end
+
 
   def different_from_old?(old_host)
     return true if type != old_host[:type]

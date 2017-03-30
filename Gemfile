@@ -2,11 +2,14 @@ source 'https://rubygems.org'
 
 gem 'activesupport'
 gem 'aws-sdk'
+gem 'fastest-csv'
 gem 'hash_dot'
 gem 'httparty'
 gem 'mongoid'
 gem 'rake'
-gem 'rspec'
-gem 'rspec-mocks'
 gem 'rufus-scheduler'
-gem 'zipruby'
+
+group :development, :test do
+  gem 'rspec'
+  gem 'rspec-mocks'
+end

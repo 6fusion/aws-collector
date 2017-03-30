@@ -19,6 +19,7 @@ GEM
     bson (4.1.1)
     builder (3.2.2)
     diff-lcs (1.2.5)
+    fastest-csv (0.0.4)
     hash_dot (2.0.2)
     httparty (0.14.0)
       multi_xml (>= 0.5.2)
@@ -53,7 +54,6 @@ GEM
     thread_safe (0.3.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    zipruby (0.3.6)
 
 PLATFORMS
   ruby
@@ -61,6 +61,7 @@ PLATFORMS
 DEPENDENCIES
   activesupport
   aws-sdk
+  fastest-csv
   hash_dot
   httparty
   mongoid
@@ -68,7 +69,6 @@ DEPENDENCIES
   rspec
   rspec-mocks
   rufus-scheduler
-  zipruby
 
 BUNDLED WITH
-   1.13.1
+   1.14.5
