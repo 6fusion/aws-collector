@@ -4,18 +4,22 @@ server:
 startup:
   - bootstrap_inventory
   - fetch_price
-  - fetch_detailed_report
 
 scheduler:
+  fetch_detailed_report:
+    rake_command: fetch_detailed_report
+    interval: 1d
+    first_in: 0
+
   collect_inventory:
     rake_command: collect_inventory
     interval: 5m
-    first_in: 5m
+    first_in: 0
 
   collect_samples:
     rake_command: collect_samples
-    interval: 15m
-    first_in: 0 # Immediately
+    interval: 5m
+    first_in: 0
 
   send_samples:
     rake_command: send_samples
@@ -26,8 +30,3 @@ scheduler:
     rake_command: fetch_price
     interval: 30d
     first_in: 30d
-
-  fetch_detailed_report:
-    rake_command: fetch_detailed_report
-    interval: 1d
-    first_in: 1d
