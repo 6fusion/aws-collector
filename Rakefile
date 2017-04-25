@@ -1,7 +1,12 @@
 require 'bundler'
+require 'logger'
 Bundler.require(:default)
 
 $:.unshift File.expand_path('lib/collectors/modules'), File.expand_path('lib/collectors'), File.expand_path('lib/helpers')
+
+STDOUT.sync = true
+$logger = Logger.new(STDOUT)
+$logger.level = ENV['LOG_LEVEL'] || Logger::INFO
 
 Dir.glob(File.join('./lib/helpers/**/*.rb'), &method(:require))
 Dir.glob(File.join('./lib/models/**/*.rb'), &method(:require))

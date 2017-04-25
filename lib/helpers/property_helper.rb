@@ -1,19 +1,19 @@
 module PropertyHelper
 
   def self.aws_region
-    read_property('AWS_REGION')
+    read_property('AWS_REGION', 'us-east-1')
   end
 
   def self.collection_arn
-    read_property('COLLECTION_ARN')
+    read_env('COLLECTION_ARN')
   end
 
   def self.billing_arn
-    read_property('BILLING_ARN')
+    read_env('BILLING_ARN')
   end
 
   def self.external_id
-    read_property('EXTERNAL_ID')
+    read_env('EXTERNAL_ID')
   end
 
   def self.infrastructure_name
@@ -37,7 +37,7 @@ module PropertyHelper
   end
 
   def self.detailed_report_prefix
-    read_property('DETAILED_REPORT_PREFIX')
+    read_env('DETAILED_REPORT_PREFIX')
   end
 
   def self.token
@@ -69,15 +69,19 @@ module PropertyHelper
   end
 
   def self.default_disk_io
-    read_property('DEFAULT_DISK_IO', '2000000000')
+    read_env('DEFAULT_DISK_IO', '2000000000')
   end
 
   def self.default_wan_io
-    read_property('DEFAULT_WAN_IO', '400000000')
+    read_env('DEFAULT_WAN_IO', '400000000')
   end
 
   def self.default_lan_io
-    read_property('DEFAULT_LAN_IO', '10000000000')
+    read_env('DEFAULT_LAN_IO', '10000000000')
+  end
+
+  def self.read_env(name, default=nil)
+    (ENV[name] and !ENV[name].blank?) ? ENV[name] : default
   end
 
 

@@ -114,8 +114,6 @@ class MeterHttpClient
       req_options[:body] = options[:body]
     end
 
-    puts "Sending reqest to meter: #{options_to_str(options)}"
-
     response = self.class.send(options[:method], options[:endpoint], req_options)
 
     response.success? || ((options[:method] != :post) and (response.code == 404)) ||

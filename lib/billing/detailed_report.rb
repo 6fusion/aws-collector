@@ -1,6 +1,5 @@
 require 'aws_helper'
 require 'fastest-csv'
-require 'open3'
 
 module AWS
   module DetailedReport
@@ -8,24 +7,31 @@ module AWS
 
     def self.fetch
       detailed_report_bucket = PropertyHelper.detailed_report_bucket
-
       if  detailed_report_bucket.empty?
-        puts "Detailed billing information not provided; skipping"
+        $logger.info "Detailed billing information not provided; skipping"
         return
       end
+      $logger.debug "Using #{detailed_report_bucket} for billing retrieval"
 
       key = "#{billing_id}-aws-billing-detailed-line-items-with-resources-and-tags-#{Time.now.strftime('%Y-%m')}.csv.zip"
-      puts "Retrieving detailed report manifest at #{key}"
-
-      response = Clients.s3.get_object({bucket: detailed_report_bucket, key: key}, target: "/tmp/#{key}")
-      # TODO consider streaming straight to uncompression routine?
-      # https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
-
-      unzip_io = IO.popen("/usr/bin/funzip /tmp/#{key}", 'rb')
-      csv = FastestCSV.new(unzip_io)
+      $logger.info "Retrieving detailed report manifest at #{key}"
+      start_time = Time.now
+      zipped_to_csv_io = IO.popen('/usr/bin/funzip', 'rb+')
+      zipped_to_csv_io.sync = true
+      csv = FastestCSV.new(zipped_to_csv_io)
       flush_reports
-      persist csv
 
+      reader_thread = Thread.new {
+        persist csv }
+
+      # cavaet emptor :https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
+      $logger.info "Retrieving detailed billing from S3"
+      Clients.s3.get_object({bucket: detailed_report_bucket, key: key}){|chunk|
+        zipped_to_csv_io.write chunk }
+
+      $logger.info "Detailed billing retrieval complete"
+      reader_thread.join
+      $logger.debug "Finished processing billing in #{Time.now - start_time} seconds"
     end
 
     def self.billing_id
@@ -54,24 +60,28 @@ module AWS
     private
 
     def self.persist(csv)
-      puts "Saving new detailed report details to DB"
+      $logger.info "Saving new detailed report details to DB"
       headers = csv.shift
       cost_index = headers.index('BlendedCost') || headers.index('Cost')
       resource_index = headers.index('ResourceId')
       usage_start_index = headers.index('UsageStartDate')
       usage_type_index = headers.index('UsageType')
-
+      count = 0
       while row = csv.shift
+        count += 1
+        $logger.debug "Processed #{count} billing items" if count % 100_000 == 0
         ReportRow.new(resource_id:      row[resource_index],
                       usage_type:       row[usage_type_index],
                       usage_start_date: row[usage_start_index],
                       cost_per_hour:    row[cost_index]).save!
       end
+
+      $logger.info "Processed #{count} billing records"
     end
 
     def self.flush_reports
-      puts "Removing old detailed report details from DB"
-      ReportRow.destroy_all
+      $logger.debug "Removing old detailed report details from DB"
+      ReportRow.collection.drop
     end
 
     # def self.date_range

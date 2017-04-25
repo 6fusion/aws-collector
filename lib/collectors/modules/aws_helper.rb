@@ -43,17 +43,36 @@ module AWSHelper
         role_session_name: 'aws-collector' }.merge( ENV['EXTERNAL_ID']&.empty? ? {} : { external_id: ENV['EXTERNAL_ID'] } )
     end
 
+    def self.simple_credentials
+      @@simple_credentials ||= Aws::Credentials.new(PropertyHelper.aws_access_key, PropertyHelper.aws_secret_key)
+    end
+
     def self.billing_role
-      @@billing_sts ||= Aws::AssumeRoleCredentials.new( role_options.merge({ role_arn: PropertyHelper.billing_arn }) )
+      @@billing_sts ||= PropertyHelper.billing_arn ?
+                          Aws::AssumeRoleCredentials.new( role_options.merge({ role_arn: PropertyHelper.billing_arn }) ) :
+                          simple_credentials
     end
 
     def self.collection_role
-      @collection_sts ||= Aws::AssumeRoleCredentials.new( role_options.merge({ role_arn: PropertyHelper.collection_arn }) )
+      @collection_sts ||= PropertyHelper.collection_arn ?
+                            Aws::AssumeRoleCredentials.new( role_options.merge({ role_arn: PropertyHelper.collection_arn }) ) :
+                            simple_credentials
     end
 
     def self.account_id
       begin
         # If we have IAM access, just return the fields
+        "#{iam_userid}:#{iam_username}"
+      rescue Aws::IAM::Errors::AccessDenied => e
+        # If not, the exception message actually includes this information as well
+        md = e.message.match(%r|arn:aws:iam::(?<userid>\d+):[^\s]+/(?<username>[^\s]+) is not authorized|)
+        "#{md[:userid]}:#{md[:username]}"
+      end
+    end
+
+    def self.account_id(region = ENV['AWS_REGION'])
+      begin
+        # If they have IAM access, just return the fields
         "#{iam_userid}:#{iam_username}"
       rescue Aws::IAM::Errors::AccessDenied => e
         # If not, the exception message actually includes this information as well

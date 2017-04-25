@@ -11,11 +11,7 @@ task :bootstrap_inventory do
 
   connector.send_infrastructure(actual_inventory)
 
-  p actual_inventory
-  puts "itearting over inventory"
-
   actual_inventory.hosts.each do |host|
-    puts "checking #{host.inspect}"
     reponse = connector.get_machine(host)
     if reponse["code"] == 404
       connector.create_host(host)

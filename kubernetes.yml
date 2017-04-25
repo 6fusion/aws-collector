@@ -1,0 +1,358 @@
+kind: Template
+metadata:
+  name: aws-collector
+  annotations:
+    displayName: "AWS Collector"
+    description: "6fusion Meter Collector for metering AWS infrastructures"
+    meterVersion: ">=0.11"
+objects:
+- apiVersion: v1
+  kind: Namespace
+  metadata:
+    name: 6fusion-aws-collector
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name:  mongo
+    namespace: aws-collector-mongodb
+  spec:
+    ports:
+    - name: mongodb-port
+      port: 27017
+      targetPort: 27017
+    selector:
+      6fusion-app: aws-collector-mongodb
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    name: mongodb
+    namespace: 6fusion-aws-collector
+    labels:
+      6fusion-app: aws-collector-mongodb
+  spec:
+    replicas: 1
+    selector:
+      6fusion-app: aws-collector-mongodb
+    template:
+      metadata:
+        name: mongodb
+        labels:
+          6fusion-app: aws-collector-mongodb
+      spec:
+        containers:
+        - name: mongodb
+          image: mongo:3.4.0
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    name: aws-collector
+    namespace: 6fusion-aws-collector
+    labels:
+      6fusion-app: aws-collector
+  spec:
+    replicas: 1
+    selector:
+      6fusion-app: aws-collector
+    template:
+      metadata:
+        name: aws-collector
+        labels:
+          6fusion-app: aws-collector
+      spec:
+        containers:
+        - name: aws-collector
+          image: 6fusion/aws-collector:alpha
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+          - name: ssl
+            mountPath: /usr/src/app/.ssl
+            readOnly: true
+          env:
+          - name: AWS_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: aws_access_key
+          - name: AWS_REGION
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: aws_region
+          - name: AWS_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: aws_secret_key
+          - name: COLLECTION_ARN
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: collection_arn
+          - name: BILLING_ARN
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: billing_arn
+          - name: EXTERNAL_ID
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: external_id
+          - name: DETAILED_REPORT_BUCKET
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: detailed_report_bucket
+          - name: DETAILED_REPORT_PREFIX
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: detailed_report_prefix
+          - name: ORGANIZATION_ID
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: organization_id
+          - name: METER_HOST
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: meter_host
+          - name: METER_PORT
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: meter_port
+          - name: INFRASTRUCTURE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: infrastructure_name
+          - name: TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: token
+          - name: USE_SSL
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: use-ssl
+          - name: VERIFY_SSL
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: verify-ssl
+        volumes:
+        - name: ssl
+          secret:
+            secretName: collector-ssl-secret
+
+parameters:
+# aws config
+- name: aws_region
+  displayName: "AWS Region"
+  sectionDisplayName: "AWS Collector"
+  section: aws-collector-secret
+  description: "Region collector will run in. The region is only needed to construct an SSL endpoint; metering is not limited to this region."
+  validations:
+    required: true
+- name: aws_access_key
+  displayName: "AWS Access Key"
+  sectionDisplayName: "AWS Collector"
+  section: aws-collector-secret
+  description: "Access Key ID associated with the AWS account roles used for metering"
+  validations:
+    required: true
+- name: aws_secret_key
+  displayName: "AWS Secret Key"
+  description: "AWS Access Secret associated with the AWS account roles used for metering"
+  sectionDisplayName: "AWS Collector"
+  section: aws-collector-secret
+  validations:
+    required: true
+- name: collection_arn
+  displayName: "Collection Role ARN"
+  sectionDisplayName: "AWS Collector"
+  section: aws-collector-secret
+  description: "The ARN of the role to use when collecting EC2 and CloudWatch data"
+  advanced: true
+- name: billing_arn
+  display_name: "Billing Role ARN"
+  sectionDisplayName: "AWS Collector"
+  section: aws-collector-secret
+  description: "The ARN of the role to use when accessing the billing S3 bucket"
+  advanced: true
+- name: external_id
+  display_name: "External ID"
+  sectionDisplayName: "AWS Collector"
+  section: aws-collector-secret
+  description: "An optional identifier used in an IAM role trust policy to designate who can assume a role"
+  advanced: true
+- name: detailed_report_bucket
+  displayName: "Detailed Report Bucket"
+  description: "Amazon S3 bucket name where detailed billing reports are stored"
+  section: aws-collector-secret
+  sectionDisplayName: "AWS Collector"
+- name: detailed_report_prefix
+  displayName: "Detailed Report Prefix"
+  section: aws-collector-secret
+  sectionDisplayName: "AWS Collector"
+  description: "Amazon detailed report name (report path)"
+# meter config
+- name: organization_id
+  displayName: "Organization ID"
+  description: "ID of an organization, in the 6fusion Meter, to submit under"
+  expandExpression: ${ORGANIZATION_ID}
+  sectionDisplayName: "6fusion Meter"
+  section: 6fusion-meter-secret
+  validations:
+    required: true
+- name: infrastructure_name
+  displayName: "Infrastructure Name"
+  description: "A unique name to be applied to the AWS account infrastructure."
+  sectionDisplayName: "6fusion Meter"
+  section: 6fusion-meter-secret
+  validations:
+    required: true
+- name: meter_host
+  displayName: Host
+  sectionDisplayName: "6fusion Meter"
+  section: 6fusion-meter-secret
+  expandExpression: ${METER_API_HOST}
+  description: "Address of the 6fusion Meter"
+  validations:
+    required: true
+  advanced: true
+- name: meter_port
+  displayName: Port
+  section: 6fusion-meter-secret
+  sectionDisplayName: "6fusion Meter"
+  type: int
+  expandExpression: ${METER_API_SSL_PORT}
+  description: "TCP port of the 6fusion Meter"
+  validations:
+    required: true
+  advanced: true
+- name: token
+  displayName: "Meter API Token"
+  sectionDisplayName: "6fusion Meter"
+  section: 6fusion-meter-secret
+  expandExpression: ${METER_API_TOKEN}
+  description: "OAuth access token for 6fusion Meter (if enabled)"
+- name: use-ssl
+  displayName: "Use SSL?"
+  type: boolean
+  value: "1"
+  sectionDisplayName: "6fusion Meter"
+  section: 6fusion-meter-secret
+  advanced: true
+- name: verify-ssl
+  displayName: "Verify SSL?"
+  type: boolean
+  sectionDisplayName: "6fusion Meter"
+  section: 6fusion-meter-secret
+  value: "0"
+  description: "Validate SSL certificate. Do not enable if using self-signed certificates"
+  advanced: true
+- name: 6fusion.openssl
+  displayName: "SSL Key"
+  sectionDisplayName: "Collector SSL"
+  section: collector-ssl-secret
+  description: "The SSL key to be used by the collector's Kubernetes health-check endpoint"
+  validations:
+    required: true
+  advanced: true
+  type: multiline
+  value: |
+    -----BEGIN RSA PRIVATE KEY-----
+    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
+    -----END RSA PRIVATE KEY-----
+- name: 6fusion.cer
+  displayName: "SSL Certificate"
+  sectionDisplayName: "Collector SSL"
+  section: collector-ssl-secret
+  description: "The SSL certificate to be used by the collector's Kubernetes health-check endpoint"
+  validations:
+    required: true
+  type: multiline
+  advanced: true
+  value: |
+    -----BEGIN CERTIFICATE-----
+    MIIFIDCCAwigAwIBAgIJAJCmpPM2XpdDMA0GCSqGSIb3DQEBBQUAMBQxEjAQBgNV
+    BAMTCW1ldGVyLWFwaTAeFw0xNjEyMjMxMzU4NDdaFw00NDA1MTAxMzU4NDdaMBQx
+    EjAQBgNVBAMTCW1ldGVyLWFwaTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoC
+    ggIBAKstf4D2BTNkMpycgVqErOnOo+Ou1EwvfNeUOIbu2s3VWEMZNGte+Iy9erHm
+    rQV/fEp9MWm9GcwS2G17LoFRqcxYF2HJhhtDxLzaA06jqMg/gLb4xy1MqG5jkh0z
+    xO/yFrLJ867mduNVlMFR3Qu85UwztK/+eDcsWw9Hs0iN8/rWW+1zoRTcYDX9F/JU
+    qkHsceeRitI/C/KTjrwO51XMMm7Zbupk4TdrTzAhiKf/WBLCQ+nmxNWQWYa6MUo+
+    FuD0Z3elKi9Kyh7s9G+P6Zt5+ssS9LGeSfMHaLQN2ImbtrDt/CQK614lWkz8xuY8
+    szHk+Bgth0zw3bF48FMljXYVkdNkf5DHbxaG5X5j3pWe6DBXb3G4q6mPXy21g8jB
+    q8POfD9uqh4RnCExGL1PvJn8TQszwv9LI1gC7ZAY4AG6yvfTzn25n3iX4q7wCQs9
+    VjllDRcGOhdlGZsXHOw3Jy8Ibem0oQSFcrcTh3ynJytle7MdPsSFqGMzd5lbuAup
+    pxaC5+lO9JD6Zyv3kHMkw0T3lUUmMTwqlMtYSTWyQl5KSwFwfRgNVOA7UnLwaVm2
+    H+tBUVtvf6of6w257xfbWMyx9IeTyWa5okzh3M34fEZVEofZMKcxito9u3OMbv07
+    0OSRcisGMBnrORq2ffo+lUKHjiLs8Lb8S3jgvI52WCFmXMcVAgMBAAGjdTBzMB0G
+    A1UdDgQWBBTWbJLQC6eG93UBGWbkNuR50/h4RTBEBgNVHSMEPTA7gBTWbJLQC6eG
+    93UBGWbkNuR50/h4RaEYpBYwFDESMBAGA1UEAxMJbWV0ZXItYXBpggkAkKak8zZe
+    l0MwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQUFAAOCAgEAabUkdbknfVsnfU+2
+    LfX/WoVa6FSwC+FHwFXBizKizax6hbaNldCv9EKNy2oRTXO44uBH+Zmvvwfs1Cbu
+    J/X0BgDTrH8MR6TF64qme0BZe4kkymlBybWvPpqtG+n2lM/HizhU/8LJwoGKwB8B
+    jPmNSmgMol5tAhUf45rmWjmqmvAYDnvvNgFlUOWz6Wm4C+bV4sfo0ttjpHhm/TBS
+    BsKSDbqbdKx7JdeWJO7RwFskfEl1ho2Zsd25+yRFB9+w/HEbEWNLUp7WPJElVjad
+    UULNqLQkY3U5rM/9bxNPXXD97rKesKJBnFNtXcmSudmVsO/bBrvhCC5xa745Y0xu
+    v2mx8YpFJVeXlJMNcn9g8aVDglziOboN/WIzUZC/NV7h4+gh/kx7clm4ZzaI6gnH
+    NzwaSyjaaQ2ASCQme8FRf7maXgidJqKGNdTzv1AR/BeeuopMqy5zmOFL7uMai5oU
+    E6rgk65RuxPV+CKMntF12WJBKM3YdDSkzDwAH/OpVl2bR73pzLH4GuthDpzX9Kb0
+    2opbvz1AZtplS8fo8hEy7V4gRQzBRyhUzTw6bN33j2D+ihSMwZBJHRTZNUTc2rpP
+    Yl68ulVT3O5GvN4YwtlsUEgrJ3hWqTt3lvJadlmYzelem3IAieV6/HdLL0aMqI3G
+    ejSAT6F78MzuvdnQpU5O7vmquuA=
+    -----END CERTIFICATE-----

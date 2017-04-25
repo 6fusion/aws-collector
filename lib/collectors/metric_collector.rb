@@ -181,8 +181,7 @@ class MetricCollector
       usage_bytes = space_available.nil? ?
                       host.get_disk_by_id(disk_id)&.bytes :
                       disk_space_used(host.get_disk_by_id(disk_id), space_available)
-      @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: usage_bytes: #{usage_bytes}, #{space_available.nil? ? 'host capacity' : 'cloudwatch'}"
-      @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: host.status: #{host.status}"
+      @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: host.status: #{host.status}, usage_bytes: #{usage_bytes}, #{space_available.nil? ? 'host capacity' : 'cloudwatch'}"
       if host.instance_store_disk&.custom_id == disk_id and (host.status != :poweredOff)
         @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: updating usage_bytes to #{instance_store_usage_bytes(host, disk_usage, time)}"
         usage_bytes = instance_store_usage_bytes(host, disk_usage, time)

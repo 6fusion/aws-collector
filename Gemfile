@@ -10,6 +10,7 @@ gem 'rake'
 gem 'rufus-scheduler'
 
 group :development, :test do
+  gem 'pry'
   gem 'rspec'
   gem 'rspec-mocks'
 end
