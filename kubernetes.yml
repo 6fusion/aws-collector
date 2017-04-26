@@ -178,11 +178,12 @@ parameters:
   advanced: true
 - name: aws_region
   displayName: "Billing S3 Region"
-  section: "AWS Collector"
-  description: "S3 Region where your detailed billing bucket resides"  
+  sectionDisplaName: "AWS Collector"
+  section: aws-collector-secret
+  description: "S3 Region where your billing bucket resides"
 - name: detailed_report_bucket
   displayName: "Billing Report Bucket"
-  description: "Amazon S3 bucket name where billing reports are stored"
+  description: "Name of S3 bucket where billing reports are stored"
   section: aws-collector-secret
   sectionDisplayName: "AWS Collector"
 - name: external_id
