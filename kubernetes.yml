@@ -150,13 +150,6 @@ objects:
 
 parameters:
 # aws config
-- name: aws_region
-  displayName: "AWS Region"
-  sectionDisplayName: "AWS Collector"
-  section: aws-collector-secret
-  description: "Region collector will run in. The region is only needed to construct an SSL endpoint; metering is not limited to this region."
-  validations:
-    required: true
 - name: aws_access_key
   displayName: "AWS Access Key"
   sectionDisplayName: "AWS Collector"
@@ -183,22 +176,22 @@ parameters:
   section: aws-collector-secret
   description: "The ARN of the role to use when accessing the billing S3 bucket"
   advanced: true
+- name: aws_region
+  displayName: "Billing S3 Region"
+  section: "AWS Collector"
+  description: "S3 Region where your detailed billing bucket resides"  
+- name: detailed_report_bucket
+  displayName: "Billing Report Bucket"
+  description: "Amazon S3 bucket name where billing reports are stored"
+  section: aws-collector-secret
+  sectionDisplayName: "AWS Collector"
 - name: external_id
   display_name: "External ID"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
   description: "An optional identifier used in an IAM role trust policy to designate who can assume a role"
   advanced: true
-- name: detailed_report_bucket
-  displayName: "Detailed Report Bucket"
-  description: "Amazon S3 bucket name where detailed billing reports are stored"
-  section: aws-collector-secret
-  sectionDisplayName: "AWS Collector"
-- name: detailed_report_prefix
-  displayName: "Detailed Report Prefix"
-  section: aws-collector-secret
-  sectionDisplayName: "AWS Collector"
-  description: "Amazon detailed report name (report path)"
+
 # meter config
 - name: organization_id
   displayName: "Organization ID"
