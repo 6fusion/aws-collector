@@ -12,6 +12,10 @@ module PropertyHelper
     read_env('BILLING_ARN')
   end
 
+  def self.billing_region
+    read_property('BILLING_REGION', 'us-east-1')
+  end
+
   def self.external_id
     read_env('EXTERNAL_ID')
   end
