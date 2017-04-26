@@ -103,11 +103,6 @@ objects:
               secretKeyRef:
                 name: aws-collector-secret
                 key: detailed_report_bucket
-          - name: DETAILED_REPORT_PREFIX
-            valueFrom:
-              secretKeyRef:
-                name: aws-collector-secret
-                key: detailed_report_prefix
           - name: ORGANIZATION_ID
             valueFrom:
               secretKeyRef:
