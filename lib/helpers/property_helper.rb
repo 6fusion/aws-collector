@@ -73,15 +73,15 @@ module PropertyHelper
   end
 
   def self.default_disk_io
-    read_env('DEFAULT_DISK_IO', '2000000000')
+    read_env('DEFAULT_DISK_IO', '2').to_f * 1000000000
   end
 
   def self.default_wan_io
-    read_env('DEFAULT_WAN_IO', '400000000')
+    read_env('DEFAULT_WAN_IO', '0.4').to_f * 1000000000
   end
 
   def self.default_lan_io
-    read_env('DEFAULT_LAN_IO', '10000000000')
+    read_env('DEFAULT_LAN_IO', '10').to_f * 1000000000
   end
 
   def self.read_env(name, default=nil)

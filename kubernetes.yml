@@ -246,6 +246,31 @@ parameters:
   value: "0"
   description: "Validate SSL certificate. Do not enable if using self-signed certificates"
   advanced: true
+- name: default-lan-io
+  displayName: "Default LAN I/O"
+  description: "A fallback value for LAN I/O speed, if the collector cannot determine the actual speed"
+  section: 6fusion-meter-secret
+  sectionDisplayName: "6fusion Meter"
+  value: "10"
+  suffix: "Gbps"
+  type: string
+- name: default-wan-io
+  displayName: "Default WAN I/O"
+  description: "A fallback value for WAN I/O speed, if the collector cannot determine the actual speed"
+  section: 6fusion-meter-secret
+  sectionDisplayName: "6fusion Meter"
+  value: "0.4"
+  suffix: "Gbps"
+  type: string
+- name: default-disk-io
+  displayName: "Default Disk I/O"
+  description: "A fallback value for disk I/O speed, if the collector cannot determine the actual speed"
+  section: 6fusion-meter-secret
+  sectionDisplayName: "6fusion Meter"
+  value: "2"
+  suffix: "Gbps"
+  type: string
+
 - name: 6fusion.openssl
   displayName: "SSL Key"
   sectionDisplayName: "Collector SSL"
