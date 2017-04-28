@@ -199,6 +199,7 @@ parameters:
   section: 6fusion-meter-secret
   validations:
     required: true
+  advanced: true
 - name: infrastructure_name
   displayName: "Infrastructure Name"
   description: "A unique name to be applied to the AWS account infrastructure."
@@ -231,6 +232,7 @@ parameters:
   section: 6fusion-meter-secret
   expandExpression: ${METER_API_TOKEN}
   description: "OAuth access token for 6fusion Meter (if enabled)"
+  advanced: true
 - name: use-ssl
   displayName: "Use SSL?"
   type: boolean
@@ -248,29 +250,31 @@ parameters:
   advanced: true
 - name: default-lan-io
   displayName: "Default LAN I/O"
-  description: "A fallback value for LAN I/O speed, if the collector cannot determine the actual speed"
+  description: "A fallback value for LAN I/O speed, if the collector cannot determine the actual LAN speed"
   section: 6fusion-meter-secret
   sectionDisplayName: "6fusion Meter"
   value: "10"
   suffix: "Gbps"
   type: string
+  advanced: true
 - name: default-wan-io
   displayName: "Default WAN I/O"
-  description: "A fallback value for WAN I/O speed, if the collector cannot determine the actual speed"
+  description: "A fallback value for WAN I/O speed, if the collector cannot determine the actual WAN speed"
   section: 6fusion-meter-secret
   sectionDisplayName: "6fusion Meter"
   value: "0.4"
   suffix: "Gbps"
   type: string
+  advanced: true
 - name: default-disk-io
   displayName: "Default Disk I/O"
-  description: "A fallback value for disk I/O speed, if the collector cannot determine the actual speed"
+  description: "A fallback value for disk I/O speed, if the collector cannot determine the actual disk speed"
   section: 6fusion-meter-secret
   sectionDisplayName: "6fusion Meter"
   value: "2"
   suffix: "Gbps"
   type: string
-
+  advanced: true
 - name: 6fusion.openssl
   displayName: "SSL Key"
   sectionDisplayName: "Collector SSL"
