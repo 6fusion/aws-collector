@@ -2,7 +2,8 @@ module AWSHelper
 
   module Clients
     def self.cloud_watch(region)
-      @@cloud_watch ||=
+      @@cloud_watch ||= Hash.new
+      @@cloud_watch[region] ||=
         Aws::CloudWatch::Client.new(
           region: region,
           credentials: AWSHelper::Identity.assume_role(:cloud_watch, region))
@@ -15,7 +16,7 @@ module AWSHelper
           credentials: AWSHelper::Identity.assume_role(:ec2, region))
     end
 
-    def self.s3(region = PropertyHelper.aws_region)
+    def self.s3(region = PropertyHelper.billing_region)
       @@s3 ||=
         Aws::S3::Client.new(
           region: region,

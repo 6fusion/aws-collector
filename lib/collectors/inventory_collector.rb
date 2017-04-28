@@ -90,7 +90,7 @@ class InventoryCollector
       name: name_from_tags(instance.tags),
       type: type,
       region: instance.client.config.region,
-      tags: ['platform:aws', 'type:instance'] + tags_to_array(instance.tags),
+      tags: ['platform:aws', 'type:instance', "region:#{instance.client.config.region}"] + tags_to_array(instance.tags),
       state: instance.state.name,
       monitoring: instance.monitoring.state,
       memory_gb: hardware.ram_gb,
