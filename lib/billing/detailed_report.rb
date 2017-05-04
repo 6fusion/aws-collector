@@ -70,10 +70,12 @@ module AWS
       csv.each_slice(1000) do |rows|
         count += 1
         $logger.debug "Processed #{count} billing items" if count % 100_000 == 0
-        ReportRow.new(resource_id:      row[resource_index],
-                      usage_type:       row[usage_type_index],
-                      usage_start_date: row[usage_start_index],
-                      cost_per_hour:    row[cost_index]).save!
+
+        ReportRow.collection.insert_many(rows.map{|row|
+                                           { resource_id: row[resource_index],
+                                             usage_type:  row[usage_type_index],
+                                             usage_start_date: row[usage_start_index],
+                                             cost_per_hour: row[cost_index] } })
       end
 
       $logger.info "Processed #{ReportRow.count} billing records"
