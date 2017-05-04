@@ -16,21 +16,23 @@ module AWS
       key = "#{billing_id}-aws-billing-detailed-line-items-with-resources-and-tags-#{Time.now.strftime('%Y-%m')}.csv.zip"
       $logger.info "Retrieving detailed report manifest at #{key}"
       start_time = Time.now
-      zipped_to_csv_io = IO.popen('/usr/bin/funzip', 'rb+')
+
+      $logger.info "Retrieving detailed billing from S3"
+      resp = s3.get_object({ bucket:'bucket-name', key:'object-key' }, target: '/tmp/billing.zip')
+      $logger.info "Detailed billing retrieval complete. Processing line items"
+
+      # cavaet emptor :https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
+      # Clients.s3.get_object({bucket: detailed_report_bucket, key: key}){|chunk|
+      #        zipped_to_csv_io.write chunk }
+
+      zipped_to_csv_io = IO.popen('/usr/bin/funzip /tmp/billing.zip', 'rb+')
       zipped_to_csv_io.sync = true
       csv = FastestCSV.new(zipped_to_csv_io)
       flush_reports
-
-      reader_thread = Thread.new {
-        persist csv }
-
-      # cavaet emptor :https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
-      $logger.info "Retrieving detailed billing from S3"
-      Clients.s3.get_object({bucket: detailed_report_bucket, key: key}){|chunk|
-        zipped_to_csv_io.write chunk }
-
-      $logger.info "Detailed billing retrieval complete"
-      reader_thread.join
+      persist csv
+      # reader_thread = Thread.new {
+      #   persist csv }
+      # reader_thread.join
       $logger.debug "Finished processing billing in #{Time.now - start_time} seconds"
     end
 

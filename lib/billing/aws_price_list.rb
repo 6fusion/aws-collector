@@ -1,5 +1,6 @@
 module AWS
   module PriceList
+    # FIXME make this dynamic
     REGIONS = {
         "us-east-1" => "US East (N. Virginia)",
         "us-west-2" => "US West (Oregon)",

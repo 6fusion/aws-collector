@@ -2,9 +2,9 @@ server:
   port: 8000
 
 startup:
+  - fetch_instance_types
   - bootstrap_inventory
   - fetch_price
-  - fetch_detailed_report
 
 scheduler:
   collect_inventory:
@@ -25,9 +25,14 @@ scheduler:
   fetch_detailed_report:
     rake_command: fetch_detailed_report
     interval: 1d
-    first_in: 1d
+    first_in: 0d
     
   fetch_price:
     rake_command: fetch_price
     interval: 30d
     first_in: 30d
+
+  fetch_instance_types:
+    rake_command: fetch_instance_types
+    interval: 1d
+    first_in: 1d
