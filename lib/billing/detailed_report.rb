@@ -16,23 +16,21 @@ module AWS
       key = "#{billing_id}-aws-billing-detailed-line-items-with-resources-and-tags-#{Time.now.strftime('%Y-%m')}.csv.zip"
       $logger.info "Retrieving detailed report manifest at #{key}"
       start_time = Time.now
-
-      $logger.info "Retrieving detailed billing from S3"
-      resp = Clients.s3.get_object({ bucket:'bucket-name', key:'object-key' }, target: '/tmp/billing.zip')
-      $logger.info "Detailed billing retrieval complete. Processing line items"
-
-      # cavaet emptor :https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
-      # Clients.s3.get_object({bucket: detailed_report_bucket, key: key}){|chunk|
-      #        zipped_to_csv_io.write chunk }
-
-      zipped_to_csv_io = IO.popen('/usr/bin/funzip /tmp/billing.zip', 'rb+')
+      zipped_to_csv_io = IO.popen('/usr/bin/funzip', 'rb+')
       zipped_to_csv_io.sync = true
       csv = FastestCSV.new(zipped_to_csv_io)
       flush_reports
-      persist csv
-      # reader_thread = Thread.new {
-      #   persist csv }
-      # reader_thread.join
+
+      reader_thread = Thread.new {
+        persist csv }
+
+      # cavaet emptor :https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
+      $logger.info "Retrieving detailed billing from S3"
+      Clients.s3.get_object({bucket: detailed_report_bucket, key: key}){|chunk|
+        zipped_to_csv_io.write chunk }
+
+      $logger.info "Detailed billing retrieval complete"
+      reader_thread.join
       $logger.debug "Finished processing billing in #{Time.now - start_time} seconds"
     end
 
@@ -69,7 +67,8 @@ module AWS
       usage_start_index = headers.index('UsageStartDate')
       usage_type_index = headers.index('UsageType')
       count = 0
-      while row = csv.shift
+
+      csv.each_slice(1000) do |rows|
         count += 1
         $logger.debug "Processed #{count} billing items" if count % 100_000 == 0
         ReportRow.new(resource_id:      row[resource_index],
@@ -78,7 +77,7 @@ module AWS
                       cost_per_hour:    row[cost_index]).save!
       end
 
-      $logger.info "Processed #{count} billing records"
+      $logger.info "Processed #{ReportRow.count} billing records"
     end
 
     def self.flush_reports

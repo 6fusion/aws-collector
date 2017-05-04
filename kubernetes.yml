@@ -60,6 +60,8 @@ objects:
           6fusion-app: aws-collector
       spec:
         containers:
+        - name: LOG_LEVEL
+          value: info
         - name: aws-collector
           image: 6fusion/aws-collector:alpha
           imagePullPolicy: IfNotPresent

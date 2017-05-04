@@ -21,7 +21,11 @@ CONFIG = YAML::load_file(File.expand_path('../config/application.yml', __FILE__)
 Mongoid.load_configuration(clients: {
     default: {
         database: 'metrics',
-        hosts: ["#{PropertyHelper.mongo_host}:#{PropertyHelper.mongo_port}"]
+        hosts: ["#{PropertyHelper.mongo_host}:#{PropertyHelper.mongo_port}"],
+        options: {
+          max_pool_size: 20,
+          min_pool_size: 2 }
+
     }
 })
 
