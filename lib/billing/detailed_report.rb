@@ -18,7 +18,7 @@ module AWS
       start_time = Time.now
 
       $logger.info "Retrieving detailed billing from S3"
-      resp = s3.get_object({ bucket:'bucket-name', key:'object-key' }, target: '/tmp/billing.zip')
+      resp = Clients.s3.get_object({ bucket:'bucket-name', key:'object-key' }, target: '/tmp/billing.zip')
       $logger.info "Detailed billing retrieval complete. Processing line items"
 
       # cavaet emptor :https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/

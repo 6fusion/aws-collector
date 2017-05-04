@@ -50,7 +50,7 @@ module AWS
         type = ec2_instance['instance_type']
         instance = InstanceType.find_or_initialize_by(name: type)
         instance.cores = ec2_instance['vCPU']
-        instance.speed_ghz = infer_speed(type)
+        instance.cpu_speed_ghz = infer_speed(type)
         instance.memory_gb = ec2_instance['memory']
         instance.network = ec2_instance['network_performance']
         instance.save
