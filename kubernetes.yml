@@ -77,57 +77,57 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: aws_access_key
+                key: awsAccessKey
           - name: BILLING_REGION
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: billing_region
+                key: billingRegion
           - name: AWS_SECRET_KEY
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: aws_secret_key
+                key: awsSecretKey
           - name: COLLECTION_ARN
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: collection_arn
+                key: collectionARN
           - name: BILLING_ARN
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: billing_arn
+                key: billingARN
           - name: EXTERNAL_ID
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: external_id
+                key: externalID
           - name: DETAILED_REPORT_BUCKET
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: detailed_report_bucket
+                key: detailedReportBucket
           - name: ORGANIZATION_ID
             valueFrom:
               secretKeyRef:
                 name: 6fusion-meter-secret
-                key: organization_id
+                key: organizationID
           - name: METER_HOST
             valueFrom:
               secretKeyRef:
                 name: 6fusion-meter-secret
-                key: meter_host
+                key: meterHost
           - name: METER_PORT
             valueFrom:
               secretKeyRef:
                 name: 6fusion-meter-secret
-                key: meter_port
+                key: meterPort
           - name: INFRASTRUCTURE_NAME
             valueFrom:
               secretKeyRef:
                 name: 6fusion-meter-secret
-                key: infrastructure_name
+                key: infrastructureName
           - name: TOKEN
             valueFrom:
               secretKeyRef:
@@ -137,12 +137,12 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: 6fusion-meter-secret
-                key: use-ssl
+                key: useSSL
           - name: VERIFY_SSL
             valueFrom:
               secretKeyRef:
                 name: 6fusion-meter-secret
-                key: verify-ssl
+                key: verifySSL
         volumes:
         - name: ssl
           secret:
@@ -150,51 +150,51 @@ objects:
 
 parameters:
 # aws config
-- name: aws_access_key
+- name: awsAccessKey
   displayName: "AWS Access Key"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
   description: "Access Key ID associated with the AWS account roles used for metering"
   validations:
     required: true
-- name: aws_secret_key
+- name: awsSecretKey
   displayName: "AWS Secret Key"
   description: "AWS Access Secret associated with the AWS account roles used for metering"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
   validations:
     required: true
-- name: collection_arn
+- name: collectionARN
   displayName: "Collection Role ARN"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
   description: "The ARN of the role to use when collecting EC2 and CloudWatch data"
   advanced: true
-- name: billing_arn
-  display_name: "Billing Role ARN"
+- name: billingARN
+  displayName: "Billing Role ARN"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
   description: "The ARN of the role to use when accessing the billing S3 bucket"
   advanced: true
-- name: billing_region
+- name: billingRegion
   displayName: "Billing S3 Region"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
   description: "S3 Region where your billing bucket resides"
-- name: detailed_report_bucket
+- name: detailedReportBucket
   displayName: "Billing Report Bucket"
   description: "Name of S3 bucket where billing reports are stored"
   section: aws-collector-secret
   sectionDisplayName: "AWS Collector"
-- name: external_id
-  display_name: "External ID"
+- name: externalID
+  displayName: "External ID"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
   description: "An optional identifier used in an IAM role trust policy to designate who can assume a role"
   advanced: true
 
 # meter config
-- name: organization_id
+- name: organizationID
   displayName: "Organization ID"
   description: "ID of an organization, in the 6fusion Meter, to submit under"
   expandExpression: ${ORGANIZATION_ID}
@@ -203,14 +203,14 @@ parameters:
   validations:
     required: true
   advanced: true
-- name: infrastructure_name
+- name: infrastructureName
   displayName: "Infrastructure Name"
   description: "A unique name to be applied to the AWS account infrastructure."
   sectionDisplayName: "6fusion Meter"
   section: 6fusion-meter-secret
   validations:
     required: true
-- name: meter_host
+- name: meterHost
   displayName: Host
   sectionDisplayName: "6fusion Meter"
   section: 6fusion-meter-secret
@@ -219,7 +219,7 @@ parameters:
   validations:
     required: true
   advanced: true
-- name: meter_port
+- name: meterPort
   displayName: Port
   section: 6fusion-meter-secret
   sectionDisplayName: "6fusion Meter"
@@ -236,14 +236,14 @@ parameters:
   expandExpression: ${METER_API_TOKEN}
   description: "OAuth access token for 6fusion Meter (if enabled)"
   advanced: true
-- name: use-ssl
+- name: useSSL
   displayName: "Use SSL?"
   type: boolean
   value: "1"
   sectionDisplayName: "6fusion Meter"
   section: 6fusion-meter-secret
   advanced: true
-- name: verify-ssl
+- name: verifySSL
   displayName: "Verify SSL?"
   type: boolean
   sectionDisplayName: "6fusion Meter"
@@ -251,7 +251,7 @@ parameters:
   value: "0"
   description: "Validate SSL certificate. Do not enable if using self-signed certificates"
   advanced: true
-- name: default-lan-io
+- name: defaultLANIO
   displayName: "Default LAN I/O"
   description: "A fallback value for LAN I/O speed, if the collector cannot determine the actual LAN speed"
   section: 6fusion-meter-secret
@@ -260,7 +260,7 @@ parameters:
   suffix: "Gbps"
   type: string
   advanced: true
-- name: default-wan-io
+- name: defaultWANIO
   displayName: "Default WAN I/O"
   description: "A fallback value for WAN I/O speed, if the collector cannot determine the actual WAN speed"
   section: 6fusion-meter-secret
@@ -269,7 +269,7 @@ parameters:
   suffix: "Gbps"
   type: string
   advanced: true
-- name: default-disk-io
+- name: defaultDiskIO
   displayName: "Default Disk I/O"
   description: "A fallback value for disk I/O speed, if the collector cannot determine the actual disk speed"
   section: 6fusion-meter-secret
@@ -278,7 +278,7 @@ parameters:
   suffix: "Gbps"
   type: string
   advanced: true
-- name: 6fusion.openssl
+- name: 6fusionOpenSSL
   displayName: "SSL Key"
   sectionDisplayName: "Collector SSL"
   section: collector-ssl-secret
@@ -339,7 +339,7 @@ parameters:
     u46h2wunwJyk6UD6Y4GV+qgZBf+J1K2g5dvic13u2+gJCDOBzmOtaYlemPmXVCvs
     BWj7hf1jJvLomPCDcnzzTWMvNmuyTJL+iu0E1bPJ5aCoxJkIfORvWlvbvNI=
     -----END RSA PRIVATE KEY-----
-- name: 6fusion.cer
+- name: 6fusionCertificate
   displayName: "SSL Certificate"
   sectionDisplayName: "Collector SSL"
   section: collector-ssl-secret
