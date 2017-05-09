@@ -87,7 +87,7 @@ class InventoryCollector
 
     # is this always safe?
     region = instance.placement.availability_zone.chop
-x =    Host.create(
+    Host.new(
       custom_id: instance_id,
       name: name_from_tags(instance.tags),
       type: type,
@@ -107,9 +107,7 @@ x =    Host.create(
       cost_per_hour: price_details.cost_per_hour,
       billing_resource: price_details.billing_resource,
       device_mappings: device_mappings
-)
-x.save
-x
+    )
   end
 
   def network_model(network)
@@ -153,6 +151,7 @@ x
     Disk.new(
       custom_id: volume.ebs.volume_id,
       name: volume.device_name,
+      type: 'ebs',
       size_gib: 0,
       state: volume.ebs.status
     )
