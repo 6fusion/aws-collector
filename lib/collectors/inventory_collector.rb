@@ -109,9 +109,9 @@ class InventoryCollector
 
   def network_model(network)
     Nic.new(
-        custom_id: network.id,
-        name: network.id,
-        state: network.status,
+      custom_id: network.network_interface_id,
+      name: network.network_interface_id,
+      state: network.status,
     )
   end
 
