@@ -39,9 +39,9 @@ class InventoryCollector
   def collect_inventory
     $logger.info { "Collecting the actual inventory from AWS..." }
     inventory = Inventory.new(
-      hosts: instances.map { |instance| host_model(instance) },
-      volumes: volumes.map { |volume| disk_model(volume) },
-      networks: vpcs.map { |vpc| nic_model(vpc) }
+      hosts: instances,
+      volumes: volumes,
+      networks: vpcs
     )
 
     $logger.info { "AWS inventory was collected" }
@@ -117,8 +117,8 @@ class InventoryCollector
 
   def nic_model(vpc)
     Nic.new(
-      custom_id: vpc.id,
-      name: name_from_tags(vpc.tags) || vpc.id,
+      custom_id: vpc.vpc_id,
+      name: name_from_tags(vpc.tags) || vpc.vpc_id,
       state: vpc.state,
       tags: tags_to_array(vpc.tags)
     )
@@ -167,27 +167,61 @@ class InventoryCollector
   end
 
   def vpcs
-    regions.collect do |region|
-      Resources.ec2(region).vpcs.entries
-    end.compact.flatten
+    vpcs = []
+    regions.each do |region|
+      $logger.debug { "Collecting VPCs for #{region}" }
+      response = ec2 = Clients.ec2(region).describe_vpcs
+      response.vpcs.each{|vpc|
+        vpcs << nic_model(vpc) }
+    end
+    $logger.info { "#{vpcs.size} VPCs collected." }
+    vpcs
   end
 
   def volumes
-    regions.collect do |region|
-      Resources.ec2(region).volumes.entries
-    end.compact.flatten
+    volumes = []
+    regions.each do |region|
+      $logger.debug { "Collecting volumes for #{region}" }
+      ec2 = Clients.ec2(region)
+      token = nil
+      loop do
+        response = ec2.describe_volumes(next_token: token)
+        response.volumes.each{|volume|
+          volumes << disk_model(volume) }
+        break unless response.next_token
+      end
+    end
+    $logger.info { "#{volumes.size} volumes collected." }
+    volumes
   end
 
   def instances
-    regions.collect do |region|
-      instances = Resources.ec2(region).instances.entries
-      $logger.debug { "Collected instances from #{region}: #{instances}" }
-      instances
-    end.compact.flatten
+    instances = []
+    count = 0
+    regions.each do |region|
+      $logger.debug { "Collecting instances for #{region}" }
+      ec2 = Clients.ec2(region)
+      region_count = 0
+      token = nil
+      loop do
+        response = ec2.describe_instances(next_token: token)
+        response.reservations.each{|reservation|
+          reservation.instances.each{|instance|
+            region_count += 1
+            print "#{instance.instance_id} " if $logger.level == ::Logger::DEBUG
+            instances << host_model(instance) } }
+        token = response.next_token
+        break unless token
+      end
+      $logger.debug { "Collected #{region_count} instances from #{region}." }
+      count += region_count
+    end
+    $logger.info { "#{count} EC2 instances collected." }
+    instances
   end
 
   def regions
-    @regions ||= Clients.ec2.describe_regions.data.regions.map(&:region_name)
+    @regions ||= Clients.ec2.describe_regions.data.regions.map(&:region_name).sort{|a,b| a.start_with?('us-') ? -1 : (a<=>b)}
   end
 
   def tags_to_array(tags)
