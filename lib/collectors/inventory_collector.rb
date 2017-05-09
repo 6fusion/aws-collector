@@ -16,6 +16,7 @@ class InventoryCollector
 
   def save!(inventory)
     $logger.info { "Saving inventory into Mongo..." }
+    p inventory
     inventory.save!
     Inventory.all.each { |inv| inv.delete if inventory != inv }
     $logger.info { "Inventory saved" }
