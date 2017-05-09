@@ -278,7 +278,7 @@ parameters:
   suffix: "Gbps"
   type: string
   advanced: true
-- name: 6fusionOpenSSL
+- name: 6fusion.openssl
   displayName: "SSL Key"
   sectionDisplayName: "Collector SSL"
   section: collector-ssl-secret
@@ -339,7 +339,7 @@ parameters:
     u46h2wunwJyk6UD6Y4GV+qgZBf+J1K2g5dvic13u2+gJCDOBzmOtaYlemPmXVCvs
     BWj7hf1jJvLomPCDcnzzTWMvNmuyTJL+iu0E1bPJ5aCoxJkIfORvWlvbvNI=
     -----END RSA PRIVATE KEY-----
-- name: 6fusionCertificate
+- name: 6fusion.cer
   displayName: "SSL Certificate"
   sectionDisplayName: "Collector SSL"
   section: collector-ssl-secret

@@ -62,7 +62,7 @@ class InventoryCollector
       $logger.error e
     end
 
-    disks = instance.volumes.map { |volume| disk_model(volume) }
+    disks = instance.block_device_mappings.map{|device| disk_model(device.ebs)}
     disks << instance_disk_model(instance) if instance_disk_model(instance)
 
     nics = instance.network_interfaces.map { |network| network_model(network) }
