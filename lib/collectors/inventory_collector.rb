@@ -62,7 +62,7 @@ class InventoryCollector
       $logger.error e
     end
 
-    disks = instance.block_device_mappings.map{|device| host_disk_model(device.ebs) }
+    disks = instance.block_device_mappings.map{|device| host_disk_model(device) }
     disks << instance_disk_model(instance) if instance_disk_model(instance)
 
     nics = instance.network_interfaces.map { |network| network_model(network) }
@@ -146,10 +146,10 @@ class InventoryCollector
 
   def host_disk_model(volume)
     Disk.new(
-      custom_id: volume.volume_id,
+      custom_id: volume.ebs.volume_id,
       name: volume.device_name,
-      size_gib: volume.size,
-      state: volume.state
+      size_gib: 0,
+      state: volume.ebs.status
     )
   end
 
