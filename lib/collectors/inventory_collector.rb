@@ -62,7 +62,7 @@ class InventoryCollector
       $logger.error e
     end
 
-    disks = instance.block_device_mappings.map{|device| disk_model(device.ebs)}
+    disks = instance.block_device_mappings.map{|device| disk_model(device.ebs, instance.placement.availability_zone)}
     disks << instance_disk_model(instance) if instance_disk_model(instance)
 
     nics = instance.network_interfaces.map { |network| network_model(network) }
@@ -124,8 +124,8 @@ class InventoryCollector
     )
   end
 
-  def disk_model(volume)
-    region = availability_zone_to_region(volume.availability_zone)
+  def disk_model(volume, availability_zone=nil)
+    region = availability_zone_to_region(availability_zone || volume.availability_zone)
     volume_type = volume.volume_type
     price_details =
       EBS.price_details(region: region, type: volume_type) ||
