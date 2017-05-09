@@ -84,12 +84,14 @@ class InventoryCollector
                         tenancy: instance.placement.tenancy) ||
       { cost_per_hour: 0, billing_resource: "none" }.to_dot
 
+    # is this always safe?
+    region = instance.placement.availability_zone.chop
     Host.new(
       custom_id: instance_id,
       name: name_from_tags(instance.tags),
       type: type,
-      region: instance.client.config.region,
-      tags: ['platform:aws', 'type:instance', "region:#{instance.client.config.region}"] + tags_to_array(instance.tags),
+      region: region,
+      tags: ['platform:aws', 'type:instance', "region:region"] + tags_to_array(instance.tags),
       state: instance.state.name,
       monitoring: instance.monitoring.state,
       memory_gb: hardware[:memory_gb],
