@@ -19,7 +19,8 @@ module AWS
 
       $logger.info "Retrieving detailed billing from S3"
       target = '/tmp/billing.zip'
-      Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target)
+      response = Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target)
+      $logger.info "Download complete. etag: #{response.etag}, length: #{response.content_length}"
       zipped_to_csv_io = IO.popen("/usr/bin/funzip #{target}", 'rb')
       zipped_to_csv_io.sync = true
 
