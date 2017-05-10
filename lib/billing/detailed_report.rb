@@ -29,6 +29,8 @@ module AWS
 
       persist(csv)
 
+#      File.delete(target)
+
       $logger.info "Detailed billing retrieval complete"
       $logger.debug "Finished processing billing in #{Time.now - start_time} seconds"
     end

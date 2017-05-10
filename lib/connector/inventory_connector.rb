@@ -29,7 +29,6 @@ class InventoryConnector
 
   def create_host(host)
     payload = host.to_payload
-    @logger.debug "creating host #{host}"
     # If name tag is missing, set name to custom_id (aka instance ID)
     payload[:name] ||= payload[:custom_id]
     # if payload[:name].nil? or payload[:name].empty?
