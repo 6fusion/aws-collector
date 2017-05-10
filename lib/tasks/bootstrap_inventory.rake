@@ -8,7 +8,7 @@ task :bootstrap_inventory do
   connector.check_organization_exist
 
   # FIXME remove this once Uber debug has finished
-  if Host.count == 0
+  if InstanceType.count == 0
     actual_inventory = collector.collect_inventory
 
     connector.send_infrastructure(actual_inventory)

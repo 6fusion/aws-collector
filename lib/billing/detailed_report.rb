@@ -22,7 +22,7 @@ module AWS
       target_file = File.open(target, 'wb')
       response = Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target_file)
       target_file.close
-      $logger.info "Download complete. etag: #{response.etag}, length: #{response.content_length}, parts_count: #{response.parts_count}"
+      $logger.info "Download complete. etag: #{response.etag}, length: #{response.content_length}, parts_count: #{response.part_number}"
       zipped_to_csv_io = IO.popen("/usr/bin/funzip #{target}", 'rb')
       zipped_to_csv_io.sync = true
 

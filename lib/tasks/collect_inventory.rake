@@ -14,8 +14,9 @@ task :collect_inventory do
       connector.send_infrastructure(actual_inventory)
     end
   rescue => e
+    $logger.error "Error sending infrastructure to API"
     $logger.error e.message
-    $logger.debug e.backtrace[0..15].join("\n")
+    $logger.debug e.backtrace
   end
 
   collector.save! actual_inventory
