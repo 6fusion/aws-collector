@@ -46,7 +46,6 @@ module AWS
 
     def self.process_json(response_body)
       JSON.parse(response_body).each do |ec2_instance|
-        $logger.debug { "Parsing #{ec2_instance}" }
         type = ec2_instance['instance_type']
         instance = InstanceType.find_or_initialize_by(name: type)
         instance.cores = ec2_instance['vCPU']
@@ -54,8 +53,9 @@ module AWS
         instance.memory_gb = ec2_instance['memory']
         instance.network = ec2_instance['network_performance']
         instance.save
+        $logger.debug { "Saving instance type: #{type}" }
       end
-      $logger.info { "#{InstanceType.count} EC2 instance types added/updated" }
+      $logger.info { "#{InstanceType.count} EC2 instance types saved" }
     end
 
     def self.infer_speed(instance_type)
