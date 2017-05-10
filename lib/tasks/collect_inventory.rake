@@ -6,11 +6,16 @@ task :collect_inventory do
 
   connector.check_organization_exist
 
-  old_inventory_json = collector.current_inventory_json
-  actual_inventory = collector.collect_inventory
+  begin # FIXME remove post Uber debug
+    old_inventory_json = collector.current_inventory_json
+    actual_inventory = collector.collect_inventory
 
-  if actual_inventory.different_from_old?(old_inventory_json)
-    connector.send_infrastructure(actual_inventory)
+    if actual_inventory.different_from_old?(old_inventory_json)
+      connector.send_infrastructure(actual_inventory)
+    end
+  rescue => e
+    $logger.error e.message
+    $logger.debug e.backtrace[0..15].join("\n")
   end
 
   collector.save! actual_inventory
@@ -38,5 +43,7 @@ task :collect_inventory do
 
       connector.patch_nic(new_nic.custom_id, new_nic.to_payload) if new_nic.different_from_old?(old_nic)
     end
+
   end
+
 end

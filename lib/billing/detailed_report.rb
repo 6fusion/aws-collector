@@ -19,8 +19,10 @@ module AWS
 
       $logger.info "Retrieving detailed billing from S3"
       target = '/tmp/billing.zip'
-      response = Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target)
-      $logger.info "Download complete. etag: #{response.etag}, length: #{response.content_length}"
+      target_file = File.open(target, 'wb')
+      response = Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target_file)
+      target_file.close
+      $logger.info "Download complete. etag: #{response.etag}, length: #{response.content_length}, parts_count: #{response.parts_count}"
       zipped_to_csv_io = IO.popen("/usr/bin/funzip #{target}", 'rb')
       zipped_to_csv_io.sync = true
 
@@ -87,6 +89,7 @@ module AWS
     def self.flush_reports
       $logger.debug "Removing old detailed report details from DB"
       ReportRow.collection.drop
+      Mongoid::Tasks::Database::create_indexes
     end
 
     # def self.date_range

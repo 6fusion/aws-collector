@@ -7,15 +7,20 @@ task :bootstrap_inventory do
 
   connector.check_organization_exist
 
-  actual_inventory = collector.collect_inventory
+  # FIXME remove this once Uber debug has finished
+  if Host.count == 0
+    actual_inventory = collector.collect_inventory
 
-  connector.send_infrastructure(actual_inventory)
+    connector.send_infrastructure(actual_inventory)
 
-  actual_inventory.hosts.each do |host|
-    reponse = connector.get_machine(host)
-    if reponse["code"] == 404
-      connector.create_host(host)
+    # Add in some threading?
+    actual_inventory.hosts.each do |host|
+      reponse = connector.get_machine(host)
+      if reponse["code"] == 404
+        connector.create_host(host)
+      end
     end
+
   end
 
 end
