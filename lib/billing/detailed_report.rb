@@ -19,7 +19,7 @@ module AWS
 
       $logger.info "Retrieving detailed billing from S3"
       target = '/tmp/billing.zip'
-      Clients.s3.get_object({bucket: detailed_report_bucket, key: key}, target: target)
+      Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target)
       zipped_to_csv_io = IO.popen("/usr/bin/funzip #{target}", 'rb')
       zipped_to_csv_io.sync = true
 
