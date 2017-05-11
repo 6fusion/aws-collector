@@ -35,7 +35,6 @@ class Host
 
   def initialize(params={})
     if params[:name].nil? or params[:name].strip.empty?
-      puts "Host #{params[:custom_id]} is missing name. Updating to match custom_id"
       params[:name] = params[:custom_id]
     end
     super

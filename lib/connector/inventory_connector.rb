@@ -18,6 +18,7 @@ class InventoryConnector
 
   def send_infrastructure(inventory)
     payload = inventory.infrastructure_json
+    $logger.debug "Sending infrastsructure payload: #{payload}"
     if infrastructure_exist?
       @meter_client.update_infrastructure(payload, @infrastructure_id)
     else
@@ -31,11 +32,6 @@ class InventoryConnector
 
   def create_host(host)
     payload = host.to_payload
-    # If name tag is missing, set name to custom_id (aka instance ID)
-    payload[:name] ||= payload[:custom_id]
-    # if payload[:name].nil? or payload[:name].empty?
-    #   payload[:name] = payload[:custom_id]
-    # end
     @meter_client.create_machine(@infrastructure_id, payload)
   end
 

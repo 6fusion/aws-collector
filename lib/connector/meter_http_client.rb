@@ -132,8 +132,9 @@ class MeterHttpClient
       response
     rescue => e
       $logger.error e
-      $logger.debug e.backtrace.join("\t")
+      puts e.backtrace.join("\n")
       unless retried
+        $logger.info "Retrying post"
         retried = true
         retry
       end
