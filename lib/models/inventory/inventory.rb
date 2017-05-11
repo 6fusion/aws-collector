@@ -48,8 +48,8 @@ class Inventory
     stats = Hash.new{|h,k| h[k]=0 }
     stats[:name] = "aggregated instance volume"
     volumes.each{|volume|
-      stats[:storage_bytes] += volume.bytes,
-      stats[:speed_bits_per_second] += PropertyHelper.default_disk_io.to_i,
+      stats[:storage_bytes] += volume.bytes
+      stats[:speed_bits_per_second] += PropertyHelper.default_disk_io.to_i
       stats[:cost_per_hour] += volume.cost
     }
     stats
