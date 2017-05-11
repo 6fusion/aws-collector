@@ -6,7 +6,7 @@ $:.unshift File.expand_path('lib/collectors/modules'), File.expand_path('lib/col
 
 $stdout.sync = true
 $logger = Logger.new($stdout)
-$logger.level = ENV['LOG_LEVEL'] || Logger::INFO
+$logger.level = Logger::DEBUG #ENV['LOG_LEVEL'] || Logger::INFO
 
 puts "Log level set to #{$logger.level}"
 

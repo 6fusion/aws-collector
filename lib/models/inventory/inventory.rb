@@ -39,8 +39,8 @@ class Inventory
     stats[:cpus] = [ { cores: 0,
                      speed_hz: 0 } ]
     hosts.each do |host|
-      stats[0][:cpus][:cores]    += host.cpu.cores
-      stats[0][:cpus][:speed_hz] += host.cpu.speed_hz
+      stats[:cpus][0][:cores]    += host.cpu.cores
+      stats[:cpus][0][:speed_hz] += host.cpu.speed_hz
       stats[:memory_bytes]    += host.memory_bytes
     end
     stats
