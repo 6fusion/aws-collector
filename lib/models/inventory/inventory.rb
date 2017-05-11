@@ -27,7 +27,7 @@ class Inventory
       tags: tags,
       hosts: [ uber_host ],
       networks: networks_with_defaults,
-      volumes: volumes.map(&:infrastructure_json) || [],
+      volumes: [ uber_volume ],
       status: status
     }
     compact ? json.compact_recursive : json
