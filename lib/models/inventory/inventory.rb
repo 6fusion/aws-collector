@@ -34,7 +34,7 @@ class Inventory
   end
 
   def uber_host
-    stats = { name: "aggregated instance host"
+    stats = { name: "aggregated instance host",
               memory_bytes: 0 }
     stats[:cpus] = { cores: 0,
                      speed_hz: 0 }
