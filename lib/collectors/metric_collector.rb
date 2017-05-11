@@ -12,8 +12,6 @@ class MetricCollector
         statistics: ['Average']
     }
     @timestamps = Set.new
-    @logger = ::Logger.new(STDOUT)
-    @logger.level = ENV['LOG_LEVEL'] || 'info'
   end
 
   def collect
@@ -36,7 +34,7 @@ class MetricCollector
     start_time ||= Time.now - interval
     end_time = start_time + interval
 
-    @logger.info "Collecting samples for period #{start_time} -> #{end_time}"
+    $logger.info "Collecting samples for period #{start_time} -> #{end_time}"
 
     @options[:start_time] = start_time.iso8601
     @options[:end_time] = end_time.iso8601
@@ -183,9 +181,9 @@ class MetricCollector
       usage_bytes = space_available.nil? ?
                       host.get_disk_by_id(disk_id)&.bytes :
                       disk_space_used(host.get_disk_by_id(disk_id), space_available)
-      @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: host.status: #{host.status}, usage_bytes: #{usage_bytes}, #{space_available.nil? ? 'host capacity' : 'cloudwatch'}"
+      $logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: host.status: #{host.status}, usage_bytes: #{usage_bytes}, #{space_available.nil? ? 'host capacity' : 'cloudwatch'}"
       if host.instance_store_disk&.custom_id == disk_id and (host.status != :poweredOff)
-        @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: updating usage_bytes to #{instance_store_usage_bytes(host, disk_usage, time)}"
+        $logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: updating usage_bytes to #{instance_store_usage_bytes(host, disk_usage, time)}"
         usage_bytes = instance_store_usage_bytes(host, disk_usage, time)
       end
 
@@ -278,8 +276,8 @@ class MetricCollector
 
     client = Clients.cloud_watch(region)
     datapoints = client.get_metric_statistics(options).data.datapoints
-    @logger.debug "#{Time.now.utc}: datapoints returned for #{options}:"
-    @logger.debug "#{Time.now.utc}: #{datapoints.inspect}"
+    $logger.debug "#{Time.now.utc}: datapoints returned for #{options}:"
+    $logger.debug "#{Time.now.utc}: #{datapoints.inspect}"
     values = datapoints.collect do |datapoint|
       timestamp = datapoint.timestamp
       @timestamps.add(timestamp)

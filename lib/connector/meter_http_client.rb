@@ -8,11 +8,6 @@ class MeterHttpClient
   headers content_type: "application/json"
   default_timeout 500
 
-  def initialize
-    @logger = ::Logger.new(STDOUT)
-    @logger.level = ENV['LOG_LEVEL'] || 'info'
-  end
-
   def samples(payload)
     send_to_meter(method: :post,
                   timeout: 500,
@@ -21,14 +16,14 @@ class MeterHttpClient
   end
 
   def create_machine(infrastructure_id, payload)
-    @logger.debug { "Creating machine #{payload[:name]}/#{payload[:custom_id]} under #{infrastructure_id}" }
+    $logger.debug { "Creating machine #{payload[:name]}/#{payload[:custom_id]} under #{infrastructure_id}" }
     send_to_meter(method: :post,
                   endpoint: URI.escape("/api/v1/infrastructures/#{infrastructure_id}/machines.json"),
                   body: payload.to_json)
   end
 
   def update_machine(machine_id, payload)
-    @logger.debug { "Updating machine #{payload} for #{machine_id}" }
+    $logger.debug { "Updating machine #{payload} for #{machine_id}" }
     send_to_meter(method: :patch,
                   endpoint: "/api/v1/machines/#{machine_id}.json",
                   body: payload.to_json)

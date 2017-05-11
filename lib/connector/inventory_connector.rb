@@ -7,8 +7,6 @@ class InventoryConnector
     @meter_client = MeterHttpClient.new
     @organization_id = PropertyHelper.organization_id
     @infrastructure_id = AWSHelper::Identity::account_id
-    @logger = ::Logger.new(STDOUT)
-    @logger.level = ENV['LOG_LEVEL'] || 'info'
   end
 
   def check_organization_exist

@@ -8,6 +8,8 @@ $stdout.sync = true
 $logger = Logger.new($stdout)
 $logger.level = ENV['LOG_LEVEL'] || Logger::INFO
 
+puts "Log level set to #{$logger.level}"
+
 Dir.glob(File.join('./lib/helpers/**/*.rb'), &method(:require))
 Dir.glob(File.join('./lib/models/**/*.rb'), &method(:require))
 Dir.glob(File.join('./lib/billing/**/*.rb'), &method(:require))
