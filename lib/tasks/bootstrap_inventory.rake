@@ -3,7 +3,6 @@ desc 'Initialize and syncronize inventory with API'
 task :bootstrap_inventory do
   $stdout.sync = true
   puts "Bootstrapping inventory"
-  $logger = Logger.new($stdout)
   $logger.info "Boostrapping inventory"
   connector = InventoryConnector.new
   collector = InventoryCollector.new

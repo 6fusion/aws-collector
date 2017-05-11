@@ -34,7 +34,7 @@ class Scheduler
       @scheduler.interval(task.interval, first_in: task.first_in) do |job|
         command = task.rake_command
         $logger.info "Launching rake task [#{command}]. Job id [#{job.id}]"
-        %x[rake #{command}]
+        %x[unbuffer rake #{command}]
         rake_return_code = $?.exitstatus
         fail("Rake returned non zero status #{rake_return_code}") if rake_return_code != 0
       end
@@ -45,7 +45,7 @@ class Scheduler
 
   def rake(command, fail_on_error = true)
     $logger.info "rake #{command}"
-    %x[rake #{command}]
+    %x[unbuffer rake #{command}]
     rake_return_code = $?.exitstatus
     if fail_on_error && rake_return_code != 0
       fail("Rake returned non zero status #{rake_return_code}")

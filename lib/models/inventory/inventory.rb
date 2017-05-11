@@ -34,24 +34,26 @@ class Inventory
   end
 
   def uber_host
-    stats = Hash.new{|h,k| h[k]=0 }
-    stats[:name] = "aggregated instance host"
-    hosts.each{|host|
-      stats[:cpu_count] += host.cpu.cores
-      stats[:cpu_speed_hz] += host.cpu.speed_hz
-      stats[:memory_bytes] += host.memory_bytes
-    }
+    stats = { name: "aggregated instance host"
+              memory_bytes: 0 }
+    stats[:cpus] = { cores: 0,
+                     speed_hz: 0 }
+    hosts.each do |host|
+      stats[:cpus][:cores]    += host.cpu.cores
+      stats[:cpus][:speed_hz] += host.cpu.speed_hz
+      stats[:memory_bytes]    += host.memory_bytes
+    end
     stats
   end
 
   def uber_volume
     stats = Hash.new{|h,k| h[k]=0 }
     stats[:name] = "aggregated instance volume"
-    volumes.each{|volume|
+    volumes.each do |volume|
       stats[:storage_bytes] += volume.bytes
       stats[:speed_bits_per_second] += PropertyHelper.default_disk_io.to_i
       stats[:cost_per_hour] += volume.cost
-    }
+    end
     stats
   end
 
