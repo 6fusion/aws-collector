@@ -98,8 +98,10 @@ class MeterHttpClient
   end
 
   def check_machine_exists(machine_id)
-    send_to_meter(method: :head,
-                  endpoint: URI.escape("/api/v1/machines/#{machine_id}.json"))
+x =    send_to_meter(method: :head,
+                     endpoint: URI.escape("/api/v1/machines/#{machine_id}.json"))
+p x
+x
   end
 
 
