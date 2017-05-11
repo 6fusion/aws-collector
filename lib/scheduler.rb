@@ -1,6 +1,8 @@
 require 'rufus-scheduler'
 require 'rake'
 
+STDOUT.sync = true
+
 class Scheduler
   extend Forwardable
 
@@ -31,8 +33,8 @@ class Scheduler
     CONFIG.scheduler.map(&:last).each do |task|
       @scheduler.interval(task.interval, first_in: task.first_in) do |job|
         command = task.rake_command
-        puts "Launching rake task [#{command}]. Job id [#{job.id}]"
-        puts %x[rake #{command}]
+        $logger.info "Launching rake task [#{command}]. Job id [#{job.id}]"
+        %x[rake #{command}]
         rake_return_code = $?.exitstatus
         fail("Rake returned non zero status #{rake_return_code}") if rake_return_code != 0
       end
@@ -42,8 +44,8 @@ class Scheduler
   private
 
   def rake(command, fail_on_error = true)
-    puts "rake #{command}"
-    puts %x[rake #{command}]
+    $logger.info "rake #{command}"
+    %x[rake #{command}]
     rake_return_code = $?.exitstatus
     if fail_on_error && rake_return_code != 0
       fail("Rake returned non zero status #{rake_return_code}")
