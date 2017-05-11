@@ -6,7 +6,7 @@ class MeterHttpClient
   include HTTParty
 
   headers content_type: "application/json"
-  default_timeout 60
+  default_timeout 500
 
   def initialize
     @logger = ::Logger.new(STDOUT)
@@ -15,7 +15,7 @@ class MeterHttpClient
 
   def samples(payload)
     send_to_meter(method: :post,
-                  timeout: 120,
+                  timeout: 500,
                   endpoint: "/api/v1/samples.json",
                   body: { samples: payload }.to_json)
   end
@@ -101,26 +101,36 @@ class MeterHttpClient
   private
 
   def send_to_meter(options)
-    host = (PropertyHelper.use_ssl ? "https://" : "http://") + PropertyHelper.meter_host
-    port = PropertyHelper.meter_port
-    host = port&.empty? ? host : "#{host}:#{port}"
 
-    self.class.base_uri(host)
+    begin
+      host = (PropertyHelper.use_ssl ? "https://" : "http://") + PropertyHelper.meter_host
+      port = PropertyHelper.meter_port
+      host = port&.empty? ? host : "#{host}:#{port}"
 
-    req_options = {
+      self.class.base_uri(host)
+
+      req_options = {
         query: query_with_token(options),
         verify: PropertyHelper.verify_ssl
-    }
+      }
 
-    if [:post, :patch].include? options[:method]
-      req_options[:body] = options[:body]
+      if [:post, :patch].include? options[:method]
+        req_options[:body] = options[:body]
+      end
+
+      req_options[:timeout] = 500
+
+      response = self.class.send(options[:method], options[:endpoint], req_options)
+
+      response.success? || ((options[:method] != :post) and (response.code == 404)) ||
+        raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
+      response
+    rescue => e
+      $logger.error e
+      $logger.debug e.backtrace.join("\n")
+      raise e
     end
 
-    response = self.class.send(options[:method], options[:endpoint], req_options)
-
-    response.success? || ((options[:method] != :post) and (response.code == 404)) ||
-      raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
-    response
   end
 
   def full_options_to_str(options)
