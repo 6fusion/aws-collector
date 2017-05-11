@@ -6,6 +6,7 @@ class MeterHttpClient
   include HTTParty
 
   headers content_type: "application/json"
+  default_timeout 60
 
   def initialize
     @logger = ::Logger.new(STDOUT)
@@ -14,6 +15,7 @@ class MeterHttpClient
 
   def samples(payload)
     send_to_meter(method: :post,
+                  timeout: 120,
                   endpoint: "/api/v1/samples.json",
                   body: { samples: payload }.to_json)
   end
