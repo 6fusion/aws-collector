@@ -4,18 +4,22 @@ STDOUT.sync = true
 class MetricsSender
 
   def send
-    samples = Sample.all.map { |sample| sample.to_payload }
-    return if samples.empty?
 
-    $logger.info "Sending samples to meter"
-    response = MeterHttpClient.new.samples(samples)
-    if response.code == 204
-      $logger.info "Samples have been sent, updating last sent time, destroying samples in Mongo"
-      update_last_sent_time
-      Sample.destroy_all
-    else
-      $logger.error "Error occurred during sending samples to meter. Status: #{response.code}"
+    Sample.all.each_slice(100) do |batch|
+      samples = batch.map {|sample| sample.to_payload }
+      return if samples.empty?
+
+      $logger.info "Sending samples to meter"
+      response = MeterHttpClient.new.samples(samples)
+      if response.code == 204
+        $logger.info "Samples have been sent, updating last sent time, destroying samples in Mongo"
+        update_last_sent_time
+        Sample.destroy_all
+      else
+        $logger.error "Error occurred during sending samples to meter. Status: #{response.code}"
+      end
     end
+
   end
 
   private

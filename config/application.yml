@@ -2,10 +2,10 @@ server:
   port: 8000
 
 startup:
-  - fetch_instance_types
-  - bootstrap_inventory
-  - fetch_price
-  - fetch_detailed_report
+#  - fetch_instance_types
+#  - bootstrap_inventory
+#  - fetch_price
+#  - fetch_detailed_report
 
 scheduler:
   collect_inventory:

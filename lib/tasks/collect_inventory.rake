@@ -7,6 +7,7 @@ task :collect_inventory do
   connector.check_organization_exist
 
   begin # FIXME remove post Uber debug
+    ## FIXME handle nil old_inventory
     old_inventory = collector.current_inventory
     actual_inventory = collector.collect_inventory
 
