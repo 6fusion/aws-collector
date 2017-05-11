@@ -91,7 +91,7 @@ class InventoryCollector
     region = instance.placement.availability_zone.chop
     Host.new(
       custom_id: instance_id,
-      name: name_from_tags(instance.tags) || instance_id,
+      name: name_from_tags(instance.tags),
       type: type,
       region: region,
       tags: ['platform:aws', 'type:instance', "region:region"] + tags_to_array(instance.tags),
