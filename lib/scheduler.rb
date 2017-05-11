@@ -45,8 +45,12 @@ class Scheduler
 
   def rake(command, fail_on_error = true)
     $logger.info "rake #{command}"
-    %x[rake #{command}]
-    rake_return_code = $?.exitstatus
+    #%x[rake #{command}]
+    Rake::Task.clear
+    Rake::load_rakefile('Rakefile')
+    Rake::Task[command].execute
+    #    rake_return_code = $?.exitstatus
+    rake_return_code = 0
     if fail_on_error && rake_return_code != 0
       fail("Rake returned non zero status #{rake_return_code}")
     end
