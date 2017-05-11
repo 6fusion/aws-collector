@@ -2,6 +2,8 @@ require 'logger'
 require 'json'
 require 'httparty'
 
+STDOUT.sync = true
+
 class ETag
   include Mongoid::Document
   field :etag, type: String

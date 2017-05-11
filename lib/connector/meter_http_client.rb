@@ -28,7 +28,7 @@ class MeterHttpClient
   end
 
   def update_machine(machine_id, payload)
-    @logger.debug { "Updating machine #{payload} under #{infrastructure_id}" }
+    @logger.debug { "Updating machine #{payload} for #{machine_id}" }
     send_to_meter(method: :patch,
                   endpoint: "/api/v1/machines/#{machine_id}.json",
                   body: payload.to_json)
