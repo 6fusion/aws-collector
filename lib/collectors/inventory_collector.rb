@@ -3,8 +3,6 @@ require 'aws_helper'
 require 'property_helper'
 require 'logger'
 
-STDOUT.sync = true
-
 class InventoryCollector
   include InventoryHelper
   include AWSHelper
@@ -21,6 +19,21 @@ class InventoryCollector
     inventory.save!
     Inventory.all.each { |inv| inv.delete if inventory != inv }
     $logger.info { "Inventory saved" }
+  end
+
+  def current_inventory
+    begin
+      $logger.info { "Trying to get the current inventory from MongoDB..." }
+      inventory = Inventory.order_by(created_at: :desc).first
+      return inventory if inventory
+
+      # $logger.info { "Trying to get the current inventory from Meter..." }
+      # inventory = InventoryConnector.new.infrastructure_json
+      # return inventory.compact_recursive.symbolize_recursive if inventory
+
+      $logger.info { "Inventory does not exist yet on meter. Using a new one..." }
+      Inventory.new # new empty inventory
+    end
   end
 
   def current_inventory_json

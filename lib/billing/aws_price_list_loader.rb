@@ -16,19 +16,19 @@ module AWS
         persist offer_file(ec2_offer["offerCode"],
                            ec2_offer["currentVersionUrl"]).to_dot
       rescue StandardError => e
-        puts "Skipping persistence of #{offer_code} because of error: #{e.message}"
+        $logger.warn "Skipping persistence of #{offer_code} because of error: #{e.message}"
       end
     end
 
     private
 
     def self.offer_file(offer_code, current_version_url)
-      puts "Fetching price details for #{offer_code}"
+      $logger.info "Fetching price details for #{offer_code}"
       http_get(current_version_url)
     end
 
     def self.flush
-      puts "Removing old AWS price list API details from DB"
+      $logger.info "Removing old AWS price list API details from DB"
       Product.destroy_all
       Term.destroy_all
     end
@@ -68,7 +68,7 @@ module AWS
         get(url)
       rescue
         retry_count -= 1
-        puts "Failed to make get request to: #{url} | Retries left: #{retry_count}"
+        $logger.info "Failed to make get request to: #{url} | Retries left: #{retry_count}"
         retry if retry_count >= 0
       end
     end
