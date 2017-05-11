@@ -30,6 +30,10 @@ class InventoryConnector
     @meter_client.get_machine(host.custom_id)
   end
 
+  def check_machine_exists(host)
+    @meter_client.check_machine_exists(host.custom_id)
+  end
+
   def create_host(host)
     payload = host.to_payload
     @meter_client.create_machine(@infrastructure_id, payload)
