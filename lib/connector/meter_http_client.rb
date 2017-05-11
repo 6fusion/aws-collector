@@ -97,11 +97,16 @@ class MeterHttpClient
                   endpoint: URI.escape("/api/v1/machines/#{machine_id}.json"))
   end
 
+  def check_machine_exists(machine_id)
+    send_to_meter(method: :head,
+                  endpoint: URI.escape("/api/v1/machines/#{machine_id}.json"))
+  end
+
 
   private
 
   def send_to_meter(options)
-
+    retried = false
     begin
       host = (PropertyHelper.use_ssl ? "https://" : "http://") + PropertyHelper.meter_host
       port = PropertyHelper.meter_port
@@ -127,7 +132,11 @@ class MeterHttpClient
       response
     rescue => e
       $logger.error e
-      $logger.debug e.backtrace.join("\n")
+      $logger.debug e.backtrace.join("\t")
+      unless retried
+        retried = true
+        retry
+      end
       raise e
     end
 

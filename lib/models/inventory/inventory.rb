@@ -25,13 +25,24 @@ class Inventory
       name: name,
       cost_per_hour: total_cost,
       tags: tags,
-      hosts: hosts.map(&:infrastructure_json) || [],
+      hosts: [ uber_host ],
       networks: networks_with_defaults,
       volumes: volumes.map(&:infrastructure_json) || [],
       status: status
     }
     compact ? json.compact_recursive : json
   end
+
+  def uber_host
+    stats = Hash.new{|h,k| h[k]=0 }
+    stats[:name] = "aggregated instance host"
+    hosts.each{|host|
+      stats[:cpu_count] += host.cpu.cores
+      stats[:cpu_speed_hz] += host.cpu.speed_hz
+      stats[:memory_bytes] += host.memory_bytes
+    }
+  end
+
 
   def networks_with_defaults
     # currently, WAN will always be missing, so we'll always just cram it in

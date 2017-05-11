@@ -23,7 +23,7 @@ task :bootstrap_inventory do
   actual_inventory.hosts.each do |host|
     threads << Thread.new {
       $logger.debug "Checking if #{host.name} exists in Meter API"
-      reponse = connector.get_machine(host)
+      reponse = connector.check_machine_exists(host)
       if reponse["code"] == 404
         connector.create_host(host)
       end
