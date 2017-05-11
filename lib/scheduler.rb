@@ -25,6 +25,9 @@ class Scheduler
         retry if retry_count < RETRY_COUNT
       end
     end
+
+    Rake::Task.clear
+    Rake::load_rakefile('Rakefile')
   end
 
   def start
@@ -34,9 +37,12 @@ class Scheduler
       @scheduler.interval(task.interval, first_in: task.first_in) do |job|
         command = task.rake_command
         $logger.info "Launching rake task [#{command}]. Job id [#{job.id}]"
-        %x[unbuffer rake #{command}]
-        rake_return_code = $?.exitstatus
-        fail("Rake returned non zero status #{rake_return_code}") if rake_return_code != 0
+
+        Rake::Task[command].execute
+
+#        %x[unbuffer rake #{command}]
+ #       rake_return_code = $?.exitstatus
+  #      fail("Rake returned non zero status #{rake_return_code}") if rake_return_code != 0
       end
     end
   end
@@ -45,9 +51,11 @@ class Scheduler
 
   def rake(command, fail_on_error = true)
     $logger.info "rake #{command}"
-    %x[unbuffer rake #{command}]
-    rake_return_code = $?.exitstatus
-    if fail_on_error && rake_return_code != 0
+    #%x[unbuffer rake #{command}]
+    unless Rake::Task[command].execute
+
+#    rake_return_code = $?.exitstatus
+ #   if fail_on_error && rake_return_code != 0
       fail("Rake returned non zero status #{rake_return_code}")
     end
   end
