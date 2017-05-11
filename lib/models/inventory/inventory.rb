@@ -41,6 +41,7 @@ class Inventory
       stats[:cpu_speed_hz] += host.cpu.speed_hz
       stats[:memory_bytes] += host.memory_bytes
     }
+    stats
   end
 
 
