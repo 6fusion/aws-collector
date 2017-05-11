@@ -1,5 +1,7 @@
 require 'logger'
 
+STDOUT.sync = true
+
 class InventoryConnector
   def initialize
     @meter_client = MeterHttpClient.new

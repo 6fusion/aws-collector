@@ -1,6 +1,8 @@
 require 'aws_helper'
 require 'logger'
 
+STDOUT.sync = true
+
 class MetricCollector
   include AWSHelper
 

@@ -4,7 +4,7 @@ require 'rake'
 class Scheduler
   extend Forwardable
 
-  RETRY_COUNT = 3
+  RETRY_COUNT = 2
 
   def_delegators :@scheduler, :shutdown
 
@@ -12,14 +12,14 @@ class Scheduler
     @scheduler = Rufus::Scheduler.new
 
     def @scheduler.on_error(job, error)
-      puts "Job [#{job.id}] failed with error [#{error}]. Going to perform #{RETRY_COUNT} retries."
+      $logger.error "Job [#{job.id}] failed with error [#{error}]. Going to perform #{RETRY_COUNT} retries."
 
       retry_count = 0
       begin
         job.call
       rescue
         retry_count += 1
-        puts "Performed #{retry_count} retries out of #{RETRY_COUNT} for job [#{job.id}]"
+        $logger.warn "Performed #{retry_count} retries out of #{RETRY_COUNT} for job [#{job.id}]"
         retry if retry_count < RETRY_COUNT
       end
     end

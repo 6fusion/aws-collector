@@ -1,6 +1,8 @@
 require 'aws_helper'
 require 'fastest-csv'
 
+STDOUT.sync = true
+
 module AWS
   module DetailedReport
     include AWSHelper

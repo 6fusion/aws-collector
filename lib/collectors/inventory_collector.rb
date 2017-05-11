@@ -3,6 +3,8 @@ require 'aws_helper'
 require 'property_helper'
 require 'logger'
 
+STDOUT.sync = true
+
 class InventoryCollector
   include InventoryHelper
   include AWSHelper
