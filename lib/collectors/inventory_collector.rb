@@ -18,7 +18,6 @@ class InventoryCollector
 
   def save!(inventory)
     $logger.info { "Saving inventory into Mongo..." }
-    p inventory
     inventory.save!
     Inventory.all.each { |inv| inv.delete if inventory != inv }
     $logger.info { "Inventory saved" }
@@ -30,9 +29,9 @@ class InventoryCollector
       inventory = Inventory.order_by(created_at: :desc).first
       return inventory.infrastructure_json if inventory
 
-      $logger.info { "Trying to get the current inventory from Meter..." }
-      inventory = InventoryConnector.new.infrastructure_json
-      return inventory.compact_recursive.symbolize_recursive if inventory
+      # $logger.info { "Trying to get the current inventory from Meter..." }
+      # inventory = InventoryConnector.new.infrastructure_json
+      # return inventory.compact_recursive.symbolize_recursive if inventory
 
       $logger.info { "Inventory does not exist yet on meter. Using a new one..." }
       Inventory.new.infrastructure_json # new empty inventory
@@ -185,7 +184,7 @@ class InventoryCollector
     vpcs = []
     regions.each do |region|
       $logger.debug { "Collecting VPCs for #{region}" }
-      response = ec2 = Clients.ec2(region).describe_vpcs
+      response = Clients.ec2(region).describe_vpcs
       response.vpcs.each{|vpc|
         vpcs << nic_model(vpc) }
     end

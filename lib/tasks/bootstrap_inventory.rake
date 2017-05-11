@@ -22,7 +22,6 @@ task :bootstrap_inventory do
   $logger.debug "Validating collected inventory against API invenetory"
   actual_inventory.hosts.each do |host|
     threads << Thread.new {
-      $logger.debug "Checking if #{host.name} exists in Meter API"
       reponse = connector.check_machine_exists(host)
       if reponse.code == 404
         connector.create_host(host)
@@ -34,6 +33,9 @@ task :bootstrap_inventory do
       threads = []
     end
   end
+
+  collector.save! actual_inventory
+
   $logger.debug "Finished bootstrapping inventory"
 
 

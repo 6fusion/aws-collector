@@ -72,11 +72,11 @@ class Inventory
   end
 
   def compare_hosts(old)
-    old_hosts = old[:hosts] || []
+    old_hosts = old || []
 
     # Invoke a callback for new and existing hosts
     hosts.each do |host|
-      old_host = old_hosts.find { |old_host| old_host[:custom_id] == host.custom_id }
+      old_host = old_hosts.find {|old_host| old_host.custom_id == host.custom_id }
       yield(host, old_host)
     end
 
@@ -85,4 +85,19 @@ class Inventory
       yield(nil, old_host) unless hosts.any? { |host| old_host[:custom_id] == host.custom_id }
     end
   end
+
+  # def compare_hosts(old)
+  #   old_hosts = old[:hosts] || []
+
+  #   # Invoke a callback for new and existing hosts
+  #   hosts.each do |host|
+  #     old_host = old_hosts.find { |old_host| old_host[:custom_id] == host.custom_id }
+  #     yield(host, old_host)
+  #   end
+
+  #   # Invoke a callback for deleted hosts
+  #   old_hosts.each do |old_host|
+  #     yield(nil, old_host) unless hosts.any? { |host| old_host[:custom_id] == host.custom_id }
+  #   end
+  # end
 end
