@@ -15,6 +15,7 @@ task :collect_inventory do
       connector.send_infrastructure(actual_inventory)
     end
 
+    # TODO map old inventory to custom_ids, reduce memory overhead?
     actual_inventory.compare_hosts(old_inventory) do |new_host, old_host|
       connector.create_host(new_host) if old_host.nil?
       connector.delete_host(old_host.custom_id, old_host.to_payload) if new_host.nil?

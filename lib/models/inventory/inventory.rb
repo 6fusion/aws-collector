@@ -102,7 +102,7 @@ class Inventory
   # end
 
   def compare_hosts(old)
-    old_hosts = old.hosts || []
+    old_hosts = old.hosts.to_a || []
 
     # Invoke a callback for new and existing hosts
     hosts.each do |host|
