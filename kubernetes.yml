@@ -251,6 +251,23 @@ parameters:
   value: "0"
   description: "Validate SSL certificate. Do not enable if using self-signed certificates"
   advanced: true
+- name: targetUtilizationPercent
+  displayName: "Target Utilization"
+  description: "Percentage of infrastructure capacity ideally under load."
+  section: 6fusion-meter-secret
+  sectionDisplayName: "6fusion Meter"
+  value: "100"
+  suffix: "%"
+  type: int
+  advanced: true
+- name: targetMachinesPerCore
+  displayName: "Machines per Core"
+  description: "Number of instances to allow per CPU core"
+  section: 6fusion-meter-secret
+  sectionDisplayName: "6fusion Meter"
+  value: "10000"
+  type: int
+  advanced: true
 - name: defaultLANIO
   displayName: "Default LAN I/O"
   description: "A fallback value for LAN I/O speed, if the collector cannot determine the actual LAN speed"

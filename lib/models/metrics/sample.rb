@@ -30,7 +30,7 @@ class Sample
     # TODO Compare these using a larger sample set
     # db.samples.explain("executionStats").distinct("start_time")
     # db.samples.aggregate( [ { $group: { _id: "$start_time" } }, { $sort: { _id: -1 } } ], { explain: true } )
-    Sample.distinct(:start_time).desc
+    Sample.distinct(:start_time).sort
   end
 
   def self.group_by_start_time(time)

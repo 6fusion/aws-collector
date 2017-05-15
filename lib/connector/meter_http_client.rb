@@ -16,7 +16,7 @@ class MeterHttpClient
   end
 
   def create_machine(infrastructure_id, payload)
-    $logger.debug { "Creating machine #{payload[:name]}/#{payload[:custom_id]} under #{infrastructure_id}" }
+    $logger.debug { "Creating machine #{payload[:name]}/#{payload[:custom_id]}" }
     send_to_meter(method: :post,
                   endpoint: URI.escape("/api/v1/infrastructures/#{infrastructure_id}/machines.json"),
                   body: payload.to_json)

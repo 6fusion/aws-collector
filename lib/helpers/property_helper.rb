@@ -84,6 +84,15 @@ module PropertyHelper
     read_env('DEFAULT_LAN_IO', '10').to_f * 1000000000
   end
 
+  def self.target_utilization_percent
+    read_env('TARGET_UTILIZATION_PERCENT', 100).to_f
+  end
+
+  def self.target_machines_per_core
+    read_env('TARGET_MACHINES_PER_CORE', 10000).to_f
+  end
+
+
   def self.read_env(name, default=nil)
     (ENV[name] and !ENV[name].blank?) ? ENV[name] : default
   end

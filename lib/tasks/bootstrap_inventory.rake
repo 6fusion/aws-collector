@@ -17,21 +17,19 @@ task :bootstrap_inventory do
   $logger.debug "Posting infrastructure"
   connector.send_infrastructure(actual_inventory)
 
-  # Add in some threading?
-  threads = []
+  # FIXME make configurable
+  pool = Concurrent::ThreadPoolExecutor.new(min_threads: 1,
+                                            max_threads: 10,
+                                            max_queue: 0,
+                                            fallback_policy: :caller_runs)
   $logger.debug "Validating collected inventory against API invenetory"
   actual_inventory.hosts.each do |host|
-    threads << Thread.new {
+    pool.post {
       reponse = connector.check_machine_exists(host)
       if reponse.code == 404
         connector.create_host(host)
       end
     }
-
-    if threads.size > 5
-      threads.map(&:join)
-      threads = []
-    end
   end
 
   collector.save! actual_inventory

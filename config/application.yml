@@ -3,9 +3,9 @@ server:
 
 startup:
   - fetch_instance_types
-#  - bootstrap_inventory
-#  - fetch_price
-#  - fetch_detailed_report
+  - bootstrap_inventory
+  - fetch_price
+  - fetch_detailed_report
 
 scheduler:
   collect_inventory:
@@ -15,7 +15,7 @@ scheduler:
 
   collect_samples:
     rake_command: collect_samples
-    interval: 5m
+    interval: 30m
     first_in: 5m
 
   send_samples:
