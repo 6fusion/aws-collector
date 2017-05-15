@@ -8,8 +8,6 @@ $stdout.sync = true
 $logger = Logger.new($stdout)
 $logger.level = Logger::DEBUG #ENV['LOG_LEVEL'] || Logger::INFO
 
-puts "Log level set to #{$logger.level}"
-
 Dir.glob(File.join('./lib/helpers/**/*.rb'), &method(:require))
 Dir.glob(File.join('./lib/models/**/*.rb'), &method(:require))
 Dir.glob(File.join('./lib/billing/**/*.rb'), &method(:require))
@@ -25,7 +23,7 @@ Mongoid.load_configuration(clients: {
         database: 'metrics',
         hosts: ["#{PropertyHelper.mongo_host}:#{PropertyHelper.mongo_port}"],
         options: {
-          max_pool_size: 20,
+          max_pool_size: 40,
           min_pool_size: 2 }
 
     }

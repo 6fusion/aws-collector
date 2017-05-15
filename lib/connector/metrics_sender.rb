@@ -1,23 +1,23 @@
-
-STDOUT.sync = true
-
 class MetricsSender
 
   def send
+    #group by sample_start  #add index
 
-    Sample.all.each_slice(100) do |batch|
-      samples = batch.map {|sample| sample.to_payload }
-      return if samples.empty?
+    Sample.persisted_start_times.each do |start_time|
+      $logger.info "Submitting samples for #{start_time}"
+      Sample.group_by_start_time(start_time).each_slice(100) do |samples|
 
-      $logger.info "Sending samples to meter"
-      response = MeterHttpClient.new.samples(samples)
-      if response.code == 204
-        $logger.info "Samples have been sent, updating last sent time, destroying samples in Mongo"
-        update_last_sent_time
-        Sample.destroy_all
-      else
-        $logger.error "Error occurred during sending samples to meter. Status: #{response.code}"
+        response = MeterHttpClient.new.samples( samples.map(:to_payload) )
+        if response.code != 204
+          $logger.error "Error occurred during sending samples to meter: #{response.code}"
+          $logger.error "Error response body: #{response.body}"
+        end
+
+        # Sample.where(id: { "$in": samples.map(&:id) } ).delete_all
+        Sample.find( samples.map(&:id) ).delete_all
       end
+
+      $logger.info "Sample submission for #{start_time} completed"
     end
 
   end

@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 
 gem 'activesupport'
 gem 'aws-sdk'
+gem 'concurrent-ruby', require: 'concurrent'
 gem 'fastest-csv'
 gem 'hash_dot'
 gem 'httparty'
