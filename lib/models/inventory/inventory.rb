@@ -81,7 +81,7 @@ class Inventory
     end
 
     # Invoke a callback for deleted hosts
-    old_hosts.each do |old_host|
+    old_inventory.each do |old_host|
       yield(nil, old_host) unless hosts.any? { |host| old_host.custom_id == host.custom_id }
     end
   end
