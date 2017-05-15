@@ -31,7 +31,7 @@ class Scheduler
   end
 
   def start
-    CONFIG.startup.each { |command| rake(command, false) }
+    CONFIG.startup&.each { |command| rake(command, false) }
 
     CONFIG.scheduler.map(&:last).each do |task|
       @scheduler.interval(task.interval, first_in: task.first_in) do |job|
