@@ -18,9 +18,16 @@ class MetricCollector
     set_time_options(inventory)
     start_time = Time.now
     $logger.info "Retrieving cloudwatch metrics for #{inventory.hosts.size} instances"
-    inventory.hosts.each { |host| collect_samples(host) }
+
+    # FIXME make configurable
+    pool = Concurrent::ThreadPoolExecutor.new(min_threads: 1,
+                                              max_threads: 10,
+                                              max_queue: 0,
+                                              fallback_policy: :caller_runs)
+    inventory.hosts.each{|host|
+      pool.post{ collect_samples(host) } }
+
     $logger.info "Cloudwatch metric retrieval completed in #{(Time.now - start_time).round} seconds."
-#    $logger.debug "Metrics collected for times: " + @timestamps.map(&:to_s).join("\n")
     inventory.update_attributes(last_collected_metrics_time: @options[:end_time])
     true
   end
@@ -51,19 +58,12 @@ class MetricCollector
     region = host.region
     platform = host.platform
 
-    # FIXME make configurable
-    pool = Concurrent::ThreadPoolExecutor.new(min_threads: 1,
-                                              max_threads: 10,
-                                              max_queue: 0,
-                                              fallback_policy: :caller_runs)
-    pool.post do
-      $logger.debug "Collecting metrics for #{custom_id}"
-      save(host,
-           machine: collect_machine(custom_id, region, platform),
-           nics: collect_nics(custom_id, region),
-           disk_usage: collect_disk_space_available(custom_id, region),
-           disks: collect_disks(host))
-    end
+    $logger.debug "Collecting metrics for #{custom_id}"
+    save(host,
+         machine: collect_machine(custom_id, region, platform),
+         nics: collect_nics(custom_id, region),
+         disk_usage: collect_disk_space_available(custom_id, region),
+         disks: collect_disks(host))
   end
 
   def collect_machine(custom_id, region, platform)
