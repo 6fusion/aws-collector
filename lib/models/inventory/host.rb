@@ -122,32 +122,32 @@ class Host
   end
 
   def compare_disks(old)
-    old_disks = old[:disks] || []
+    old_disks = old.disks || []
 
     # Invoke a callback for new and existing disks
     disks.each do |disk|
-      old_disk = old_disks.find { |old_disk| old_disk[:custom_id] == disk.custom_id }
+      old_disk = old_disks.find { |old_disk| old_disk.custom_id == disk.custom_id }
       yield(disk, old_disk)
     end
 
     # Invoke a callback for deleted disks
     old_disks.each do |old_disk|
-      yield(nil, old_disk) unless disks.any? { |disk| old_disk[:custom_id] == disk.custom_id }
+      yield(nil, old_disk) unless disks.any? { |disk| old_disk.custom_id == disk.custom_id }
     end
   end
 
   def compare_nics(old)
-    old_nics = old[:nics] || []
+    old_nics = old.nics || []
 
     # Invoke a callback for new and existing nics
     nics.each do |nic|
-      old_nic = old_nics.find { |old_nic| old_nic[:custom_id] == nic.custom_id }
+      old_nic = old_nics.find { |old_nic| old_nic.custom_id == nic.custom_id }
       yield(nic, old_nic)
     end
 
     # Invoke a callback for deleted nics
     old_nics.each do |old_nic|
-      yield(nil, old_nic) unless nics.any? { |nic| old_nic[:custom_id] == nic.custom_id }
+      yield(nil, old_nic) unless nics.any? { |nic| old_nic.custom_id == nic.custom_id }
     end
   end
 end

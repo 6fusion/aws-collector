@@ -16,10 +16,11 @@ class MetricCollector
     return false unless inventory
 
     set_time_options(inventory)
+    start_time = Time.now
     $logger.info "Retrieving cloudwatch metrics for #{inventory.hosts.size} instances"
     inventory.hosts.each { |host| collect_samples(host) }
-    $logger.info "Cloudwatch metric retrieval completed"
-    $logger.debug "Metrics collected for times: " + @timestamps.map(&:to_s).join("\n")
+    $logger.info "Cloudwatch metric retrieval completed in #{(Time.now - start_time).round} seconds."
+#    $logger.debug "Metrics collected for times: " + @timestamps.map(&:to_s).join("\n")
     inventory.update_attributes(last_collected_metrics_time: @options[:end_time])
     true
   end
