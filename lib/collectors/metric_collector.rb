@@ -21,7 +21,7 @@ class MetricCollector
 
     # FIXME make configurable
     pool = Concurrent::ThreadPoolExecutor.new(min_threads: 1,
-                                              max_threads: 10,
+                                              max_threads: 15,
                                               max_queue: 0,
                                               fallback_policy: :caller_runs)
     inventory.hosts.each{|host|

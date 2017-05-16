@@ -28,7 +28,7 @@ class Inventory
       hosts: [ uber_host ],
       networks: networks_with_defaults,
       volumes: [ uber_volume ],
-      status: status
+      status: status,
       constraints: { target_utilization_percent: PropertyHelper.target_utilization_percent,
                      target_machines_per_Core:   PropertyHelper.target_machines_per_core }
     }
