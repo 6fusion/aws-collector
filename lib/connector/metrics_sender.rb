@@ -15,7 +15,7 @@ class MetricsSender
           end
 
           # TODO cf Sample.where(id: { "$in": samples.map(&:id) } ).delete_all
-          Sample.find( samples.map(&:id) ).delete_all
+          Sample.where( id: { "$in": samples.map(&:id) } ).delete_all
         end
       end
       $logger.info "Sample submission for #{start_time} completed"
