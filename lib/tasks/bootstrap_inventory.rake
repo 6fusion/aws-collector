@@ -1,12 +1,9 @@
 desc 'Initialize and syncronize inventory with API'
 
 task :bootstrap_inventory do
-  $stdout.sync = true
   $logger.info "Boostrapping inventory"
   connector = InventoryConnector.new
   collector = InventoryCollector.new
-
-  puts "log level #{$logger.level} == #{Logger::DEBUG}"
 
   $logger.debug "Checking that organization exists"
   connector.check_organization_exist
@@ -23,6 +20,7 @@ task :bootstrap_inventory do
                                             max_queue: 0,
                                             fallback_policy: :caller_runs)
   $logger.debug "Validating collected inventory against API invenetory"
+
   actual_inventory.hosts.each do |host|
     pool.post {
       reponse = connector.check_machine_exists(host)
@@ -31,6 +29,8 @@ task :bootstrap_inventory do
       end
     }
   end
+
+  pool.wait_for_termination
 
   collector.save! actual_inventory
 

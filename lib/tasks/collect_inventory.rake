@@ -51,6 +51,8 @@ task :collect_inventory do
       end
     end
 
+    pool.wait_for_termination
+
     collector.save! actual_inventory
 
   rescue => e

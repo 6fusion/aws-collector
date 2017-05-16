@@ -4,11 +4,6 @@ require 'httparty'
 
 STDOUT.sync = true
 
-class ETag
-  include Mongoid::Document
-  field :etag, type: String
-end
-
 module AWS
   module EC2InstanceTypes
 
@@ -36,7 +31,7 @@ module AWS
 
     # private methods
     def self.instance_source_updated?
-      etag = ETag.first_or_initialize
+      etag = ETag.find_or_create_by(name: 'ec2info')
       response = HTTParty.head(EC2_INSTANCES_URL)
       if ( etag.etag != response['etag'] )
         etag.update_attribute(:etag, response.headers['etag'])

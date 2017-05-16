@@ -11,17 +11,17 @@ scheduler:
   collect_inventory:
     rake_command: collect_inventory
     interval: 5m
-    first_in: 0
+    first_in: 5m
 
   collect_samples:
     rake_command: collect_samples
     interval: 30m
-    first_in: 5m
+    first_in: 0m
 
   send_samples:
     rake_command: send_samples
-    interval: 5m
-    first_in: 10m
+    interval: 30m
+    first_in: 35m
 
   fetch_detailed_report:
     rake_command: fetch_detailed_report

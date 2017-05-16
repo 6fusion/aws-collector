@@ -27,16 +27,18 @@ class MetricsSender
   def update_last_sent_time
     end_time = last_sample_time
     $logger.info "Updating last sent metrics time to #{end_time}"
+#FIXME kub secret
+    File.write('/tmp/last_sent_metrics_time', end_time)
 
-    inventory = synced_inventory
-    return unless inventory
+    # inventory = synced_inventory
+    # return unless inventory
 
-    inventory.hosts.update_all(last_sent_metrics_time: end_time)
-    response = InventoryConnector.new.send_infrastructure(inventory)
+    # inventory.hosts.update_all(last_sent_metrics_time: end_time)
+    # response = InventoryConnector.new.send_infrastructure(inventory)
 
-    if response.code != 200
-      $logger.error "Error occurred during updating last sent time for infrastructure id '#{inventory.custom_id}'"
-    end
+    # if response.code != 200
+    #   $logger.error "Error occurred during updating last sent time for infrastructure id '#{inventory.custom_id}'"
+    # end
   end
 
   def last_sample_time

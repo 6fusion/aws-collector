@@ -30,7 +30,7 @@ class Inventory
       volumes: [ uber_volume ],
       status: status,
       constraints: { target_utilization_percent: PropertyHelper.target_utilization_percent,
-                     target_machines_per_Core:   PropertyHelper.target_machines_per_core }
+                     target_machines_per_core:   PropertyHelper.target_machines_per_core }
     }
     compact ? json.compact_recursive : json
   end

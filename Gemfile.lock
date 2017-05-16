@@ -19,6 +19,7 @@ GEM
     bson (4.1.1)
     builder (3.2.2)
     coderay (1.1.1)
+    concurrent-ruby (1.0.5)
     diff-lcs (1.2.5)
     fastest-csv (0.0.4)
     hash_dot (2.0.2)
@@ -68,6 +69,7 @@ PLATFORMS
 DEPENDENCIES
   activesupport
   aws-sdk
+  concurrent-ruby
   fastest-csv
   hash_dot
   httparty

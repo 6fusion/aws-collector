@@ -25,6 +25,15 @@ module AWS
       response = Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target_file)
       target_file.close
       $logger.info "Download complete. etag: #{response.etag}, length: #{response.content_length}, parts_count: #{response.parts_count if response.respond_to?(:parts_count)}"
+
+      etag = ETag.find_or_create_by(name: 'billing')
+      if etag.etag == response.etag
+        $logger.info "No billing updates"
+        return
+      else
+        etag.update_attribute(:etag, response.etag)
+      end
+
       zipped_to_csv_io = IO.popen("/usr/bin/funzip #{target}", 'rb')
       zipped_to_csv_io.sync = true
 

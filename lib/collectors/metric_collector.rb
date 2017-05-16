@@ -18,14 +18,16 @@ class MetricCollector
     set_time_options(inventory)
     start_time = Time.now
     $logger.info "Retrieving cloudwatch metrics for #{inventory.hosts.size} instances"
-
+    $logger.debug @options.inspect
     # FIXME make configurable
     pool = Concurrent::ThreadPoolExecutor.new(min_threads: 1,
-                                              max_threads: 15,
+                                              max_threads: 10,
                                               max_queue: 0,
                                               fallback_policy: :caller_runs)
     inventory.hosts.each{|host|
       pool.post{ collect_samples(host) } }
+
+    pool.wait_for_termination
 
     $logger.info "Cloudwatch metric retrieval completed in #{(Time.now - start_time).round} seconds."
     inventory.update_attributes(last_collected_metrics_time: @options[:end_time])
@@ -37,6 +39,7 @@ class MetricCollector
     interval = CONFIG.scheduler.collect_samples.interval.to_i.minutes
 
     start_time = inventory.last_collected_metrics_time
+    # FIXME
     start_time ||= last_sent_metrics_time(inventory)
     start_time ||= Time.now - interval
     end_time = start_time + interval
@@ -48,9 +51,17 @@ class MetricCollector
   end
 
   def last_sent_metrics_time(inventory)
-    meter_response = MeterHttpClient.new.get_infrastructure(inventory.custom_id)
-    time = meter_response['hosts']&.first&.send(:[], 'last_sent_metrics_time')
-    Time.parse(time) if time
+    # meter_response = MeterHttpClient.new.get_infrastructure(inventory.custom_id)
+    # time = meter_response['hosts']&.first&.send(:[], 'last_sent_metrics_time')
+    begin
+      time = File.read('/tmp/last_sent_metrics_time')
+      Time.parse(time)
+    rescue Errno::ENOENT => e
+      nil
+    rescue => e
+      $logger.warn "Not able to determine last sent metrics time: #{e.message}"
+      nil
+    end
   end
 
   def collect_samples(host)
@@ -159,8 +170,8 @@ class MetricCollector
       disk_sample = disk_samples(host, samples, time)
 
       Sample.new(
-          start_time: @options[:start_time],
-          end_time: @options[:end_time],
+          start_time: time,
+          end_time: time + 5.minutes,
           machine_sample: machine_sample,
           nic_sample: nic_sample,
           disk_samples: disk_sample
