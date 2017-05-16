@@ -115,10 +115,16 @@ class Host
 
 
   def different_from_old?(old_host)
-    return true if type != old_host[:type]
-    return true if status&.to_s != old_host[:status]&.to_s
-    json = to_payload.compact_recursive
-    [:name, :tags].any? { |key| json[key] != old_host[key] }
+    (type != old_host.type) or
+      (status != old_host.status) or
+      (name != old_host.name) or
+      (tags.sort != old_host.tags.sort)
+    # return true if type != old_host.type
+    # return true if status&.to_s != old_host&.status&.to_s
+    # return true if name != old_host.name
+
+    #    json = to_payload.compact_recursive
+    #    [:name, :tags].any? { |key| json[key] != old_host[key] }
   end
 
   def compare_disks(old)
