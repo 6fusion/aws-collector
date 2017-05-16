@@ -5,15 +5,15 @@ class MetricsSender
 
     Sample.persisted_start_times.each do |start_time|
       $logger.info "Submitting samples for #{start_time}"
-      Sample.group_by_start_time(start_time).each_slice(100) do |samples|
-
+      Sample.group_by_start_time(start_time)[:samples].each_slice(100) do |samples_bson|
+        samples = samples_bson.map{|s| Sample.new(s)}
         response = MeterHttpClient.new.samples( samples.map(&:to_payload) )
         if response.code != 204
           $logger.error "Error occurred during sending samples to meter: #{response.code}"
           $logger.error "Error response body: #{response.body}"
         end
 
-        # Sample.where(id: { "$in": samples.map(&:id) } ).delete_all
+        # TODO cf Sample.where(id: { "$in": samples.map(&:id) } ).delete_all
         Sample.find( samples.map(&:id) ).delete_all
       end
       $logger.info "Sample submission for #{start_time} completed"

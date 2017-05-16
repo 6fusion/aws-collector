@@ -35,7 +35,8 @@ class Sample
 
   def self.group_by_start_time(time)
     Sample.collection.aggregate( [ { "$match": { start_time: time } },
-                                   { "$group": { _id: "$start_time" } } ] )
+                                   { "$group": { _id: "$start_time",
+                                                 samples:  { "$push": '$$CURRENT' } } } ] )
   end
 
 end
