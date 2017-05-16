@@ -27,6 +27,7 @@ class MetricCollector
     inventory.hosts.each{|host|
       pool.post{ collect_samples(host) } }
 
+    pool.shutdown
     pool.wait_for_termination
 
     $logger.info "Cloudwatch metric retrieval completed in #{(Time.now - start_time).round} seconds."
