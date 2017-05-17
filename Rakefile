@@ -16,7 +16,9 @@ Dir.glob(File.join('./lib/connector/**/*.rb'), &method(:require))
 Dir.glob(File.join('./lib/tasks/**/*.rb'), &method(:require))
 Dir.glob(File.join('./lib/*.rb'), &method(:require))
 
-CONFIG = YAML::load_file(File.expand_path('../config/application.yml', __FILE__)).to_dot
+yaml_erb = File.read(File.expand_path('../config/application.yml', __FILE__))
+renderer = ERB.new(yaml_erb, nil, '-')
+CONFIG = YAML::load(renderer.result(binding)).to_dot
 
 Mongoid.load_configuration(clients: {
     default: {

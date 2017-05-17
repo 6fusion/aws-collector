@@ -1,22 +1,33 @@
 class MetricsSender
 
   def send
-    #group by sample_start  #add index
 
     Sample.persisted_start_times.each do |start_time|
       $logger.info "Submitting samples for #{start_time}"
       Sample.group_by_start_time(start_time).each do |samples_by_date|
-        samples_by_date[:samples].each_slice(100) do |samples_bson|
-          samples = samples_bson.map{|s| Sample.new(s)}
-          response = MeterHttpClient.new.samples( samples.map(&:to_payload) )
-          if response.code != 204
-            $logger.error "Error occurred during sending samples to meter: #{response.code}"
-            $logger.error "Error response body: #{response.body}"
+
+        pool = Concurrent::ThreadPoolExecutor.new(min_threads: 1,
+                                                  max_threads: 5,
+                                                  max_queue: 0,
+                                                  fallback_policy: :caller_runs)
+
+        samples_by_date[:samples].each_slice(200) do |samples_bson|
+          pool.post do
+            samples = samples_bson.map{|s| Sample.new(s)}
+            response = MeterHttpClient.new.samples( samples.map(&:to_payload) )
+            if response.code != 204
+              $logger.error "Error occurred during sending samples to meter: #{response.code}"
+              $logger.error "Error response body: #{response.body}"
+            end
+
+            Sample.where( id: { "$in": samples.map(&:id) } ).delete_all
           end
 
-          # TODO cf Sample.where(id: { "$in": samples.map(&:id) } ).delete_all
-          Sample.where( id: { "$in": samples.map(&:id) } ).delete_all
         end
+
+        pool.shutdown
+        pool.wait_for_termination
+
       end
       $logger.info "Sample submission for #{start_time} completed"
     end

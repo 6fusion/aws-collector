@@ -235,7 +235,6 @@ class InventoryCollector
         response.reservations.each{|reservation|
           reservation.instances.each{|instance|
             region_count += 1
-            print "#{instance.instance_id} " if $logger.level == ::Logger::DEBUG
             instances << host_model(instance) } }
         token = response.next_token
         break unless token

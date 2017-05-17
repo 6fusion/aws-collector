@@ -103,6 +103,11 @@ objects:
               secretKeyRef:
                 name: aws-collector-secret
                 key: externalID
+          - name: COLLECTION_INTERVAL
+            valueFrom:
+              secretKeyRef:
+                name: aws-collector-secret
+                key: collectionInterval
           - name: DETAILED_REPORT_BUCKET
             valueFrom:
               secretKeyRef:
@@ -192,6 +197,14 @@ parameters:
   section: aws-collector-secret
   description: "An optional identifier used in an IAM role trust policy to designate who can assume a role"
   advanced: true
+- name: collectionInterval
+  displayName: "CloudWatch Collection Frequency"
+  sectionDisplayName: "AWS Collector"
+  section: aws-collector-secret
+  description: "The frequency the collector will query CloudWatch for consumption metrics."
+  advanced: true
+  value: 60
+  suffix: "minutes"
 
 # meter config
 - name: organizationID

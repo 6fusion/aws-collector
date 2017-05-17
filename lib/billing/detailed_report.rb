@@ -13,13 +13,11 @@ module AWS
         $logger.info "Detailed billing information not provided; skipping"
         return
       end
-      $logger.debug "Using #{detailed_report_bucket} for billing retrieval"
 
       key = "#{billing_id}-aws-billing-detailed-line-items-with-resources-and-tags-#{Time.now.strftime('%Y-%m')}.csv.zip"
-      $logger.info "Retrieving detailed report manifest at #{key}"
+      $logger.info "Retrieving detailed report manifest at #{detailed_report_bucket}/#{key}"
       start_time = Time.now
 
-      $logger.info "Retrieving detailed billing from S3"
       target = '/tmp/billing.zip'
       target_file = File.open(target, 'wb')
       response = Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target_file)

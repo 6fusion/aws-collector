@@ -30,7 +30,7 @@ class MetricCollector
     pool.shutdown
     pool.wait_for_termination
 
-    $logger.info "Cloudwatch metric retrieval completed in #{(Time.now - start_time).round} seconds."
+    $logger.info "Cloudwatch metric retrieval for #{inventory.hosts.size} instances completed in #{(Time.now - start_time).round} seconds."
     inventory.update_attributes(last_collected_metrics_time: @options[:end_time])
     true
   end
@@ -70,7 +70,6 @@ class MetricCollector
     region = host.region
     platform = host.platform
 
-    $logger.debug "Collecting metrics for #{custom_id}"
     save(host,
          machine: collect_machine(custom_id, region, platform),
          nics: collect_nics(custom_id, region),

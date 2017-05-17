@@ -40,9 +40,9 @@ class Scheduler
 
         Rake::Task[command].execute
 
-#        %x[unbuffer rake #{command}]
- #       rake_return_code = $?.exitstatus
-  #      fail("Rake returned non zero status #{rake_return_code}") if rake_return_code != 0
+        # %x[unbuffer rake #{command}]
+        # rake_return_code = $?.exitstatus
+        # fail("Rake returned non zero status #{rake_return_code}") if rake_return_code != 0
       end
     end
   end

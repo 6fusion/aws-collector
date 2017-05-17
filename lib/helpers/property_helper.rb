@@ -92,6 +92,9 @@ module PropertyHelper
     read_env('TARGET_MACHINES_PER_CORE', 10000).to_f
   end
 
+  def self.collection_interval
+    read_env('COLLECTION_INTERVAL', 60).to_i
+  end
 
   def self.read_env(name, default=nil)
     (ENV[name] and !ENV[name].blank?) ? ENV[name] : default
