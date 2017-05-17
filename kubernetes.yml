@@ -148,6 +148,16 @@ objects:
               secretKeyRef:
                 name: 6fusion-meter-secret
                 key: verifySSL
+          - name: TARGET_UTILIZATION_PERCENT
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: targetUtilizationPercent
+          - name: TARGET_MACHINES_PER_CORE
+            valueFrom:
+              secretKeyRef:
+                name: 6fusion-meter-secret
+                key: targetMachinesPerCore
         volumes:
         - name: ssl
           secret:
