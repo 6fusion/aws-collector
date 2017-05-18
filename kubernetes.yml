@@ -208,10 +208,10 @@ parameters:
   description: "An optional identifier used in an IAM role trust policy to designate who can assume a role"
   advanced: true
 - name: collectionInterval
-  displayName: "CloudWatch Collection Frequency"
+  displayName: "Metrics Collection Frequency"
   sectionDisplayName: "AWS Collector"
   section: aws-collector-secret
-  description: "The frequency the collector will query CloudWatch for consumption metrics."
+  description: "How often the collector will query CloudWatch. AWS fees may apply (https://aws.amazon.com/cloudwatch/pricing)."
   advanced: true
   value: 60
   suffix: "minutes"
