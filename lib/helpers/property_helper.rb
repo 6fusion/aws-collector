@@ -96,7 +96,7 @@ module PropertyHelper
     read_env('COLLECTION_INTERVAL', 60).to_i
   end
 
-  def self.collection_interval
+  def self.sample_granularity
     read_env('SAMPLE_GRANULARITY', 15).to_i
   end
 
