@@ -115,7 +115,7 @@ objects:
             valueFrom:
               secretKeyRef:
                 name: aws-collector-secret
-                key: sampleGranularit
+                key: sampleGranularity
           - name: DETAILED_REPORT_BUCKET
             valueFrom:
               secretKeyRef:
@@ -221,7 +221,7 @@ parameters:
   section: aws-collector-secret
   description: "How often the collector will query CloudWatch. AWS fees may apply (https://aws.amazon.com/cloudwatch/pricing)."
   advanced: true
-  value: 60
+  value: 15
   suffix: "minutes"
 - name: sampleGranularity
   displayName: "Sample Granularity"
