@@ -5,7 +5,7 @@ class MetricCollector
 
   def initialize
     @options = {
-        period: 5.minutes,
+        period: PropertyHelper.sample_granularity.minutes,
         statistics: ['Average']
     }
     @timestamps = Set.new

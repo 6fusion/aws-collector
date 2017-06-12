@@ -96,6 +96,10 @@ module PropertyHelper
     read_env('COLLECTION_INTERVAL', 60).to_i
   end
 
+  def self.collection_interval
+    read_env('SAMPLE_GRANULARITY', 15).to_i
+  end
+
   def self.read_env(name, default=nil)
     (ENV[name] and !ENV[name].blank?) ? ENV[name] : default
   end
