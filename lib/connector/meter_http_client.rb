@@ -135,7 +135,6 @@ class MeterHttpClient
       end
       raise e
     end
-
   end
 
   def full_options_to_str(options)
