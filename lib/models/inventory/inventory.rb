@@ -25,12 +25,38 @@ class Inventory
       name: name,
       cost_per_hour: total_cost,
       tags: tags,
-      hosts: hosts.map(&:infrastructure_json) || [],
+      hosts: [ uber_host ],
       networks: networks_with_defaults,
-      volumes: volumes.map(&:infrastructure_json) || [],
-      status: status
+      volumes: [ uber_volume ],
+      status: status,
+      constraints: { target_utilization_percent: PropertyHelper.target_utilization_percent,
+                     target_machines_per_core:   PropertyHelper.target_machines_per_core }
     }
     compact ? json.compact_recursive : json
+  end
+
+  def uber_host
+    stats = { name: "aggregated instance host",
+              memory_bytes: 0 }
+    stats[:cpus] = [ { cores: 0,
+                     speed_hz: 0 } ]
+    hosts.each do |host|
+      stats[:cpus][0][:cores]    += host.cpu.cores
+      stats[:cpus][0][:speed_hz] += host.cpu.speed_hz
+      stats[:memory_bytes]    += host.memory_bytes
+    end
+    stats
+  end
+
+  def uber_volume
+    stats = Hash.new{|h,k| h[k]=0 }
+    stats[:name] = "aggregated instance volume"
+    volumes.each do |volume|
+      stats[:storage_bytes] += volume.bytes
+      stats[:speed_bits_per_second] += PropertyHelper.default_disk_io.to_i
+      stats[:cost_per_hour] += volume.cost
+    end
+    stats
   end
 
   def networks_with_defaults
@@ -50,17 +76,17 @@ class Inventory
   end
 
   def compare_hosts(old)
-    old_hosts = old[:hosts] || []
+    old_hosts = old.hosts.to_a || []
 
     # Invoke a callback for new and existing hosts
     hosts.each do |host|
-      old_host = old_hosts.find { |old_host| old_host[:custom_id] == host.custom_id }
+      old_host = old_hosts.find { |old_host| old_host.custom_id == host.custom_id }
       yield(host, old_host)
     end
 
     # Invoke a callback for deleted hosts
     old_hosts.each do |old_host|
-      yield(nil, old_host) unless hosts.any? { |host| old_host[:custom_id] == host.custom_id }
+      yield(nil, old_host) unless hosts.any? { |host| old_host.custom_id == host.custom_id }
     end
   end
 end

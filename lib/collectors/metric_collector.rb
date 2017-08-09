@@ -1,17 +1,14 @@
 require 'aws_helper'
-require 'logger'
 
 class MetricCollector
   include AWSHelper
 
   def initialize
     @options = {
-        period: 5.minutes,
+        period: PropertyHelper.sample_granularity.minutes,
         statistics: ['Average']
     }
     @timestamps = Set.new
-    @logger = ::Logger.new(STDOUT)
-    @logger.level = ENV['LOG_LEVEL'] || 'info'
   end
 
   def collect
@@ -19,31 +16,53 @@ class MetricCollector
     return false unless inventory
 
     set_time_options(inventory)
+    start_time = Time.now
+    $logger.info "Retrieving cloudwatch metrics for #{inventory.hosts.size} instances"
+    $logger.debug @options.inspect
+    # FIXME make configurable
+    pool = Concurrent::ThreadPoolExecutor.new(min_threads: 1,
+                                              max_threads: 10,
+                                              max_queue: 0,
+                                              fallback_policy: :caller_runs)
+    inventory.hosts.each{|host|
+      pool.post{ collect_samples(host) } }
 
-    inventory.hosts.each { |host| collect_samples(host) }
+    pool.shutdown
+    pool.wait_for_termination
+
+    $logger.info "Cloudwatch metric retrieval for #{inventory.hosts.size} instances completed in #{(Time.now - start_time).round} seconds."
     inventory.update_attributes(last_collected_metrics_time: @options[:end_time])
     true
   end
 
-  private
+#  private
   def set_time_options(inventory)
     interval = CONFIG.scheduler.collect_samples.interval.to_i.minutes
 
     start_time = inventory.last_collected_metrics_time
+    # FIXME
     start_time ||= last_sent_metrics_time(inventory)
     start_time ||= Time.now - interval
     end_time = start_time + interval
 
-    @logger.info "Collecting samples for period #{start_time} -> #{end_time}"
+    $logger.info "Collecting samples for period #{start_time} -> #{end_time}"
 
     @options[:start_time] = start_time.iso8601
     @options[:end_time] = end_time.iso8601
   end
 
   def last_sent_metrics_time(inventory)
-    meter_response = MeterHttpClient.new.get_infrastructure(inventory.custom_id)
-    time = meter_response['hosts']&.first&.send(:[], 'last_sent_metrics_time')
-    Time.parse(time) if time
+    # meter_response = MeterHttpClient.new.get_infrastructure(inventory.custom_id)
+    # time = meter_response['hosts']&.first&.send(:[], 'last_sent_metrics_time')
+    begin
+      time = File.read('/tmp/last_sent_metrics_time')
+      Time.parse(time)
+    rescue Errno::ENOENT => e
+      nil
+    rescue => e
+      $logger.warn "Not able to determine last sent metrics time: #{e.message}"
+      nil
+    end
   end
 
   def collect_samples(host)
@@ -128,8 +147,6 @@ class MetricCollector
   end
 
 
-
-
   def save(host, samples)
     machine = samples[:machine]
     nics = samples[:nics]
@@ -153,8 +170,8 @@ class MetricCollector
       disk_sample = disk_samples(host, samples, time)
 
       Sample.new(
-          start_time: @options[:start_time],
-          end_time: @options[:end_time],
+          start_time: time,
+          end_time: time + 5.minutes,
           machine_sample: machine_sample,
           nic_sample: nic_sample,
           disk_samples: disk_sample
@@ -181,9 +198,7 @@ class MetricCollector
       usage_bytes = space_available.nil? ?
                       host.get_disk_by_id(disk_id)&.bytes :
                       disk_space_used(host.get_disk_by_id(disk_id), space_available)
-      @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: host.status: #{host.status}, usage_bytes: #{usage_bytes}, #{space_available.nil? ? 'host capacity' : 'cloudwatch'}"
       if host.instance_store_disk&.custom_id == disk_id and (host.status != :poweredOff)
-        @logger.debug "#{Time.now.utc}: #{disk_id}@#{host.custom_id}: updating usage_bytes to #{instance_store_usage_bytes(host, disk_usage, time)}"
         usage_bytes = instance_store_usage_bytes(host, disk_usage, time)
       end
 
@@ -276,8 +291,6 @@ class MetricCollector
 
     client = Clients.cloud_watch(region)
     datapoints = client.get_metric_statistics(options).data.datapoints
-    @logger.debug "#{Time.now.utc}: datapoints returned for #{options}:"
-    @logger.debug "#{Time.now.utc}: #{datapoints.inspect}"
     values = datapoints.collect do |datapoint|
       timestamp = datapoint.timestamp
       @timestamps.add(timestamp)

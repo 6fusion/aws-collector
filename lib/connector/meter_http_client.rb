@@ -1,4 +1,4 @@
-require "httparty"
+require 'httparty'
 require 'uri'
 require 'logger'
 
@@ -6,27 +6,24 @@ class MeterHttpClient
   include HTTParty
 
   headers content_type: "application/json"
-
-  def initialize
-    @logger = ::Logger.new(STDOUT)
-    @logger.level = ENV['LOG_LEVEL'] || 'info'
-  end
+  default_timeout 500
 
   def samples(payload)
     send_to_meter(method: :post,
+                  timeout: 500,
                   endpoint: "/api/v1/samples.json",
                   body: { samples: payload }.to_json)
   end
 
   def create_machine(infrastructure_id, payload)
-    @logger.debug { "Creating machine #{payload} under #{infrastructure_id}" }
+    $logger.debug { "Creating machine #{payload[:name]}/#{payload[:custom_id]}" }
     send_to_meter(method: :post,
                   endpoint: URI.escape("/api/v1/infrastructures/#{infrastructure_id}/machines.json"),
                   body: payload.to_json)
   end
 
   def update_machine(machine_id, payload)
-    @logger.debug { "Updating machine #{payload} under #{infrastructure_id}" }
+    $logger.debug { "Updating machine #{payload} for #{machine_id}" }
     send_to_meter(method: :patch,
                   endpoint: "/api/v1/machines/#{machine_id}.json",
                   body: payload.to_json)
@@ -95,30 +92,49 @@ class MeterHttpClient
                   endpoint: URI.escape("/api/v1/machines/#{machine_id}.json"))
   end
 
+  def check_machine_exists(machine_id)
+    send_to_meter(method: :head,
+                  endpoint: URI.escape("/api/v1/machines/#{machine_id}.json"))
+  end
+
 
   private
 
   def send_to_meter(options)
-    host = (PropertyHelper.use_ssl ? "https://" : "http://") + PropertyHelper.meter_host
-    port = PropertyHelper.meter_port
-    host = port&.empty? ? host : "#{host}:#{port}"
+    retried = false
+    begin
+      host = (PropertyHelper.use_ssl ? "https://" : "http://") + PropertyHelper.meter_host
+      port = PropertyHelper.meter_port
+      host = port&.empty? ? host : "#{host}:#{port}"
 
-    self.class.base_uri(host)
+      self.class.base_uri(host)
 
-    req_options = {
+      req_options = {
         query: query_with_token(options),
         verify: PropertyHelper.verify_ssl
-    }
+      }
 
-    if [:post, :patch].include? options[:method]
-      req_options[:body] = options[:body]
+      if [:post, :patch].include? options[:method]
+        req_options[:body] = options[:body]
+      end
+
+      req_options[:timeout] = 500
+
+      response = self.class.send(options[:method], options[:endpoint], req_options)
+
+      response.success? || ((options[:method] != :post) and (response.code == 404)) ||
+        raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
+      response
+    rescue => e
+      $logger.error e
+      puts e.backtrace.join("\n")
+      unless retried
+        $logger.info "Retrying post"
+        retried = true
+        retry
+      end
+      raise e
     end
-
-    response = self.class.send(options[:method], options[:endpoint], req_options)
-
-    response.success? || ((options[:method] != :post) and (response.code == 404)) ||
-      raise("Response to meter has failed. Response: #{response}\nDetails:\n#{full_options_to_str(options)}")
-    response
   end
 
   def full_options_to_str(options)

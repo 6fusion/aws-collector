@@ -11,42 +11,55 @@ class InventoryCollector
   include AWS::DetailedReport
 
   def initialize
-    super
-    @logger = ::Logger.new(STDOUT)
-    @logger.level = ENV['LOG_LEVEL'] || 'info'
+    @instance_types = Hash.new
   end
 
   def save!(inventory)
-    @logger.info { "Saving inventory into Mongo..." }
+    $logger.info { "Saving inventory into Mongo..." }
     inventory.save!
     Inventory.all.each { |inv| inv.delete if inventory != inv }
-    @logger.info { "Inventory saved" }
+    $logger.info { "Inventory saved" }
+  end
+
+  def current_inventory
+    begin
+      $logger.info { "Trying to get the current inventory from MongoDB..." }
+      inventory = Inventory.order_by(created_at: :desc).first
+      return inventory if inventory
+
+      # $logger.info { "Trying to get the current inventory from Meter..." }
+      # inventory = InventoryConnector.new.infrastructure_json
+      # return inventory.compact_recursive.symbolize_recursive if inventory
+
+      $logger.info { "Inventory does not exist yet on meter. Using a new one..." }
+      Inventory.new # new empty inventory
+    end
   end
 
   def current_inventory_json
     begin
-      @logger.info { "Trying to get the current inventory from MongoDB..." }
+      $logger.info { "Trying to get the current inventory from MongoDB..." }
       inventory = Inventory.order_by(created_at: :desc).first
       return inventory.infrastructure_json if inventory
 
-      @logger.info { "Trying to get the current inventory from Meter..." }
-      inventory = InventoryConnector.new.infrastructure_json
-      return inventory.compact_recursive.symbolize_recursive if inventory
+      # $logger.info { "Trying to get the current inventory from Meter..." }
+      # inventory = InventoryConnector.new.infrastructure_json
+      # return inventory.compact_recursive.symbolize_recursive if inventory
 
-      @logger.info { "Inventory does not exist yet on meter. Using a new one..." }
+      $logger.info { "Inventory does not exist yet on meter. Using a new one..." }
       Inventory.new.infrastructure_json # new empty inventory
     end
   end
 
   def collect_inventory
-    @logger.info { "Collecting the actual inventory from AWS..." }
+    $logger.info { "Collecting the actual inventory from AWS..." }
     inventory = Inventory.new(
-      hosts: instances.map { |instance| host_model(instance) },
-      volumes: volumes.map { |volume| disk_model(volume) },
-      networks: vpcs.map { |vpc| nic_model(vpc) }
+      hosts: instances,
+      volumes: volumes,
+      networks: vpcs
     )
 
-    @logger.info { "AWS inventory was collected" }
+    $logger.info { "AWS inventory was collected" }
     inventory
   end
 
@@ -57,13 +70,14 @@ class InventoryCollector
     instance_id = instance.instance_id
     hardware = nil
     begin
-    hardware = INSTANCE_TYPES[type].to_dot
+      @instance_types[type] ||= InstanceType.find_by(name: type)
+      hardware = @instance_types[type]
     rescue StandardError => e
-      @logger.error "TYPE triggering exception: #{type}"
-      @logger.error e
+      $logger.error "TYPE triggering exception: #{type}"
+      $logger.error e
     end
 
-    disks = instance.volumes.map { |volume| disk_model(volume) }
+    disks = instance.block_device_mappings.map{|device| host_disk_model(device) }
     disks << instance_disk_model(instance) if instance_disk_model(instance)
 
     nics = instance.network_interfaces.map { |network| network_model(network) }
@@ -85,20 +99,22 @@ class InventoryCollector
                         tenancy: instance.placement.tenancy) ||
       { cost_per_hour: 0, billing_resource: "none" }.to_dot
 
+    # is this always safe?
+    region = instance.placement.availability_zone.chop
     Host.new(
       custom_id: instance_id,
       name: name_from_tags(instance.tags),
       type: type,
-      region: instance.client.config.region,
-      tags: ['platform:aws', 'type:instance', "region:#{instance.client.config.region}"] + tags_to_array(instance.tags),
+      region: region,
+      tags: ['platform:aws', 'type:instance', "region:#{region}"] + tags_to_array(instance.tags),
       state: instance.state.name,
       monitoring: instance.monitoring.state,
-      memory_gb: hardware.ram_gb,
-      network: hardware.network,
+      memory_gb: hardware[:memory_gb],
+      network: hardware[:network],
       platform: platform,
       cpu: Cpu.new(
-        cores: hardware.cores,
-        speed_ghz: hardware.cpu_speed_ghz
+        cores: hardware[:cores],
+        speed_ghz: hardware[:cpu_speed_ghz]
       ),
       nics: nics,
       disks: disks,
@@ -110,16 +126,16 @@ class InventoryCollector
 
   def network_model(network)
     Nic.new(
-        custom_id: network.id,
-        name: network.id,
-        state: network.status,
+      custom_id: network.network_interface_id,
+      name: network.network_interface_id,
+      state: network.status,
     )
   end
 
   def nic_model(vpc)
     Nic.new(
-      custom_id: vpc.id,
-      name: name_from_tags(vpc.tags) || vpc.id,
+      custom_id: vpc.vpc_id,
+      name: name_from_tags(vpc.tags) || vpc.vpc_id,
       state: vpc.state,
       tags: tags_to_array(vpc.tags)
     )
@@ -142,6 +158,16 @@ class InventoryCollector
       tags: tags_to_array(volume.tags),
       cost_per_hour: price_details.cost_per_hour,
       billing_resource: price_details.billing_resource
+    )
+  end
+
+  def host_disk_model(volume)
+    Disk.new(
+      custom_id: volume.ebs.volume_id,
+      name: volume.device_name,
+      type: 'ebs',
+      size_gib: 0,
+      state: volume.ebs.status
     )
   end
 
@@ -168,27 +194,60 @@ class InventoryCollector
   end
 
   def vpcs
-    regions.collect do |region|
-      Resources.ec2(region).vpcs.entries
-    end.compact.flatten
+    vpcs = []
+    regions.each do |region|
+      $logger.debug { "Collecting VPCs for #{region}" }
+      response = Clients.ec2(region).describe_vpcs
+      response.vpcs.each{|vpc|
+        vpcs << nic_model(vpc) }
+    end
+    $logger.info { "#{vpcs.size} VPCs collected." }
+    vpcs
   end
 
   def volumes
-    regions.collect do |region|
-      Resources.ec2(region).volumes.entries
-    end.compact.flatten
+    volumes = []
+    regions.each do |region|
+      $logger.debug { "Collecting volumes for #{region}" }
+      ec2 = Clients.ec2(region)
+      token = nil
+      loop do
+        response = ec2.describe_volumes(next_token: token)
+        response.volumes.each{|volume|
+          volumes << disk_model(volume) }
+        break unless response.next_token
+      end
+    end
+    $logger.info { "#{volumes.size} volumes collected." }
+    volumes
   end
 
   def instances
-    regions.collect do |region|
-      instances = Resources.ec2(region).instances.entries
-      @logger.debug { "Collected instances from #{region}: #{instances}" }
-      instances
-    end.compact.flatten
+    instances = []
+    count = 0
+    regions.each do |region|
+      $logger.debug { "Collecting instances for #{region}" }
+      ec2 = Clients.ec2(region)
+      region_count = 0
+      token = nil
+      loop do
+        response = ec2.describe_instances(next_token: token)
+        response.reservations.each{|reservation|
+          reservation.instances.each{|instance|
+            region_count += 1
+            instances << host_model(instance) } }
+        token = response.next_token
+        break unless token
+      end
+      $logger.debug { "Collected #{region_count} instances from #{region}." }
+      count += region_count
+    end
+    $logger.info { "#{count} EC2 instances collected." }
+    instances
   end
 
   def regions
-    @regions ||= Clients.ec2.describe_regions.data.regions.map(&:region_name)
+    @regions ||= Clients.ec2.describe_regions.data.regions.map(&:region_name).sort{|a,b| a.start_with?('us-') ? -1 : (a<=>b)}
   end
 
   def tags_to_array(tags)

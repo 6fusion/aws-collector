@@ -73,15 +73,31 @@ module PropertyHelper
   end
 
   def self.default_disk_io
-    read_env('DEFAULT_DISK_IO', '2000000000')
+    read_env('DEFAULT_DISK_IO', '2').to_f * 1000000000
   end
 
   def self.default_wan_io
-    read_env('DEFAULT_WAN_IO', '400000000')
+    read_env('DEFAULT_WAN_IO', '0.4').to_f * 1000000000
   end
 
   def self.default_lan_io
-    read_env('DEFAULT_LAN_IO', '10000000000')
+    read_env('DEFAULT_LAN_IO', '10').to_f * 1000000000
+  end
+
+  def self.target_utilization_percent
+    read_env('TARGET_UTILIZATION_PERCENT', 100).to_f
+  end
+
+  def self.target_machines_per_core
+    read_env('TARGET_MACHINES_PER_CORE', 10000).to_f
+  end
+
+  def self.collection_interval
+    read_env('COLLECTION_INTERVAL', 60).to_i
+  end
+
+  def self.sample_granularity
+    read_env('SAMPLE_GRANULARITY', 15).to_i
   end
 
   def self.read_env(name, default=nil)

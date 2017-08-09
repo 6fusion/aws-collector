@@ -1,6 +1,8 @@
 require 'aws_helper'
 require 'fastest-csv'
 
+STDOUT.sync = true
+
 module AWS
   module DetailedReport
     include AWSHelper
@@ -11,26 +13,37 @@ module AWS
         $logger.info "Detailed billing information not provided; skipping"
         return
       end
-      $logger.debug "Using #{detailed_report_bucket} for billing retrieval"
 
       key = "#{billing_id}-aws-billing-detailed-line-items-with-resources-and-tags-#{Time.now.strftime('%Y-%m')}.csv.zip"
-      $logger.info "Retrieving detailed report manifest at #{key}"
+      $logger.info "Retrieving detailed report manifest at #{detailed_report_bucket}/#{key}"
       start_time = Time.now
-      zipped_to_csv_io = IO.popen('/usr/bin/funzip', 'rb+')
+
+      target = '/tmp/billing.zip'
+      target_file = File.open(target, 'wb')
+      response = Clients.s3.get_object(bucket: detailed_report_bucket, key: key, response_target: target_file)
+      target_file.close
+      $logger.info "Download complete. etag: #{response.etag}, length: #{response.content_length}, parts_count: #{response.parts_count if response.respond_to?(:parts_count)}"
+
+      etag = ETag.find_or_create_by(name: 'billing')
+      if etag.etag == response.etag
+        $logger.info "No billing updates"
+        return
+      else
+        etag.update_attribute(:etag, response.etag)
+      end
+
+      zipped_to_csv_io = IO.popen("/usr/bin/funzip #{target}", 'rb')
       zipped_to_csv_io.sync = true
-      csv = FastestCSV.new(zipped_to_csv_io)
+
       flush_reports
 
-      reader_thread = Thread.new {
-        persist csv }
+      csv = FastestCSV.new(zipped_to_csv_io)
 
-      # cavaet emptor :https://aws.amazon.com/blogs/developer/downloading-objects-from-amazon-s3-using-the-aws-sdk-for-ruby/
-      $logger.info "Retrieving detailed billing from S3"
-      Clients.s3.get_object({bucket: detailed_report_bucket, key: key}){|chunk|
-        zipped_to_csv_io.write chunk }
+      persist(csv)
+
+#      File.delete(target)
 
       $logger.info "Detailed billing retrieval complete"
-      reader_thread.join
       $logger.debug "Finished processing billing in #{Time.now - start_time} seconds"
     end
 
@@ -67,21 +80,25 @@ module AWS
       usage_start_index = headers.index('UsageStartDate')
       usage_type_index = headers.index('UsageType')
       count = 0
-      while row = csv.shift
+
+      csv.each_slice(1000) do |rows|
         count += 1
         $logger.debug "Processed #{count} billing items" if count % 100_000 == 0
-        ReportRow.new(resource_id:      row[resource_index],
-                      usage_type:       row[usage_type_index],
-                      usage_start_date: row[usage_start_index],
-                      cost_per_hour:    row[cost_index]).save!
+
+        ReportRow.collection.insert_many(rows.map{|row|
+                                           { resource_id: row[resource_index],
+                                             usage_type:  row[usage_type_index],
+                                             usage_start_date: row[usage_start_index],
+                                             cost_per_hour: row[cost_index] } })
       end
 
-      $logger.info "Processed #{count} billing records"
+      $logger.info "Processed #{ReportRow.count} billing records"
     end
 
     def self.flush_reports
       $logger.debug "Removing old detailed report details from DB"
       ReportRow.collection.drop
+      Mongoid::Tasks::Database::create_indexes
     end
 
     # def self.date_range

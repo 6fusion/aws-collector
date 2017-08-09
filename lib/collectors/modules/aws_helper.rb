@@ -10,7 +10,8 @@ module AWSHelper
     end
 
     def self.ec2(region = PropertyHelper.aws_region)
-      @@ec2 ||=
+      @@ec2 ||= Hash.new
+      @@ec2[region] ||=
         Aws::EC2::Client.new(
           region: region,
           credentials: AWSHelper::Identity.assume_role(:ec2, region))

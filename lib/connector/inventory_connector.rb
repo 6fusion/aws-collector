@@ -1,12 +1,12 @@
 require 'logger'
 
+STDOUT.sync = true
+
 class InventoryConnector
   def initialize
     @meter_client = MeterHttpClient.new
     @organization_id = PropertyHelper.organization_id
     @infrastructure_id = AWSHelper::Identity::account_id
-    @logger = ::Logger.new(STDOUT)
-    @logger.level = ENV['LOG_LEVEL'] || 'info'
   end
 
   def check_organization_exist
@@ -16,6 +16,7 @@ class InventoryConnector
 
   def send_infrastructure(inventory)
     payload = inventory.infrastructure_json
+    $logger.debug "Sending infrastsructure payload: #{payload}"
     if infrastructure_exist?
       @meter_client.update_infrastructure(payload, @infrastructure_id)
     else
@@ -27,14 +28,12 @@ class InventoryConnector
     @meter_client.get_machine(host.custom_id)
   end
 
+  def check_machine_exists(host)
+    @meter_client.check_machine_exists(host.custom_id)
+  end
+
   def create_host(host)
     payload = host.to_payload
-    @logger.debug "creating host #{host}"
-    # If name tag is missing, set name to custom_id (aka instance ID)
-    payload[:name] ||= payload[:custom_id]
-    # if payload[:name].nil? or payload[:name].empty?
-    #   payload[:name] = payload[:custom_id]
-    # end
     @meter_client.create_machine(@infrastructure_id, payload)
   end
 
