@@ -56,8 +56,7 @@ class InventoryCollector
     inventory = Inventory.new(
       hosts: instances,
       volumes: volumes,
-      networks: vpcs
-    )
+      networks: vpcs)
 
     $logger.info { "AWS inventory was collected" }
     inventory
@@ -189,7 +188,8 @@ class InventoryCollector
     Nic.new(
       custom_id: "united_network_of_instance_#{instance.instance_id}",
       name: :united_network,
-      state: :available
+      state: :available,
+      speed_bits_per_second: infer_lan_bandwidth(instance.network)
     )
   end
 
@@ -260,4 +260,15 @@ class InventoryCollector
   def availability_zone_to_region(availability_zone)
     availability_zone.gsub(/[a-z]$/, "")
   end
+
+  def self.infer_lan_bandwidth(level)
+    case level
+    when /low$/i      then 300_000_000  # low$, so that "Low to Moderate" falls under moderate
+    when /moderate/i  then 900_000_000
+    when /high/i      then 2_200_000_000
+    when /10 gig/     then 10_000_000_000
+    when /20 gig/     then 20_000_000_000
+    end
+  end
+
 end
