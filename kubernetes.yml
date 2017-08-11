@@ -50,6 +50,13 @@ objects:
               memory: 500Mi
           args:
             - --wiredTigerCacheSizeGB=0.5
+          volumeMounts:
+          - mountPath: /data/db
+            name: mongodb
+        volumes:
+        - name: mongodb
+          emptyDir: {}
+            
 - apiVersion: v1
   kind: ReplicationController
   metadata:
