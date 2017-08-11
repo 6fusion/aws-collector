@@ -26,7 +26,7 @@ class Inventory
       cost_per_hour: total_cost,
       tags: tags,
       hosts: [ uber_host ],
-      networks: [ uber_network, Nic.default_wan_nic ],
+      networks: [ uber_network, Nic.default_wan_hash ],
       volumes: [ uber_volume ],
       status: status,
       constraints: { target_utilization_percent: PropertyHelper.target_utilization_percent,
@@ -62,9 +62,9 @@ class Inventory
   def uber_network
     stats = Hash.new{|h,k| h[k]=0 }
     stats[:name] = 'aggregated instance network'
-    stats[:state] += 'connected'
-    stats[:status] += 'Active'
-    stats[:kind] += 'LAN'
+    stats[:state] = 'connected'
+    stats[:status] = 'Active'
+    stats[:kind] = 'LAN'
     hosts.each {|host|
       stats[:speed_bits_per_second] += host.nics.first.speed_bits_per_second unless host.nics.empty? }
     stats

@@ -78,9 +78,8 @@ class InventoryCollector
 
     disks = instance.block_device_mappings.map{|device| host_disk_model(device) }
     disks << instance_disk_model(instance) if instance_disk_model(instance)
-
-    nics = instance.network_interfaces.map { |network| network_model(network) }
-    nics << instance_nic_model(instance)
+    nics = instance.network_interfaces.map{|network| nic_model(hardware, network) }
+#    nics << instance_nic_model(instance)
 
     device_mappings = Hash[*instance.block_device_mappings.map do |device|
       [device.device_name, device.ebs.volume_id]
@@ -123,22 +122,21 @@ class InventoryCollector
     )
   end
 
-  def network_model(network)
+  def nic_model(hardware, network)
     Nic.new(
       custom_id: network.network_interface_id,
       name: network.network_interface_id,
       state: network.status,
-    )
+      speed_bits_per_second: infer_lan_bandwidth(hardware[:network]))
   end
 
-  def nic_model(vpc)
-    Nic.new(
-      custom_id: vpc.vpc_id,
-      name: name_from_tags(vpc.tags) || vpc.vpc_id,
-      state: vpc.state,
-      tags: tags_to_array(vpc.tags)
-    )
-  end
+  # def nic_model(vpc)
+  #   Nic.new(
+  #     custom_id: vpc.vpc_id,
+  #     name: name_from_tags(vpc.tags) || vpc.vpc_id,
+  #     state: vpc.state,
+  #     tags: tags_to_array(vpc.tags))
+  # end
 
   def disk_model(volume)
     region = availability_zone_to_region(volume.availability_zone)
@@ -184,25 +182,25 @@ class InventoryCollector
     )
   end
 
-  def instance_nic_model(instance)
-    p instance
-    Nic.new(
-      custom_id: "united_network_of_instance_#{instance.instance_id}",
-      name: :united_network,
-      state: :available,
-      speed_bits_per_second: infer_lan_bandwidth(instance.network)
-    )
-  end
+#   def instance_nic_model(instance)
+#     p instance
+#     Nic.new(
+#       custom_id: "united_network_of_instance_#{instance.instance_id}",
+#       name: :united_network,
+#       state: :available,
+# #      speed_bits_per_second: infer_lan_bandwidth(instance.network)
+#     )
+#   end
 
   def vpcs
     vpcs = []
-    regions.each do |region|
-      $logger.debug { "Collecting VPCs for #{region}" }
-      response = Clients.ec2(region).describe_vpcs
-      response.vpcs.each{|vpc|
-        vpcs << nic_model(vpc) }
-    end
-    $logger.info { "#{vpcs.size} VPCs collected." }
+    # regions.each do |region|
+    #   $logger.debug { "Collecting VPCs for #{region}" }
+    #   response = Clients.ec2(region).describe_vpcs
+    #   response.vpcs.each{|vpc|
+    #     vpcs << nic_model(vpc) }
+    # end
+    # $logger.info { "#{vpcs.size} VPCs collected." }
     vpcs
   end
 
@@ -262,7 +260,7 @@ class InventoryCollector
     availability_zone.gsub(/[a-z]$/, "")
   end
 
-  def self.infer_lan_bandwidth(level)
+  def infer_lan_bandwidth(level)
     case level
     when /low$/i      then 300_000_000  # low$, so that "Low to Moderate" falls under moderate
     when /moderate/i  then 900_000_000

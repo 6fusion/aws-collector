@@ -17,8 +17,12 @@ class Nic
 
   validates :custom_id, presence: true
 
-  def self.default_wan_nic
-    Nic.new(name: 'default_WAN', custom_id: 'default_WAN', state: 'active', kind: 'WAN')
+  def self.default_wan_hash
+    { name: 'default_WAN',
+      custom_id: 'default_WAN',
+      state: 'active',
+      kind: 'WAN',
+      speed_bits_per_second: PropertyHelper.default_wan_io.to_i }
   end
 
   def infrastructure_json
