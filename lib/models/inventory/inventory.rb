@@ -26,7 +26,7 @@ class Inventory
       cost_per_hour: total_cost,
       tags: tags,
       hosts: [ uber_host ],
-      networks: networks_with_defaults,
+      networks: [ uber_network, Nic.default_wan_hash ],
       volumes: [ uber_volume ],
       status: status,
       constraints: { target_utilization_percent: PropertyHelper.target_utilization_percent,
@@ -36,7 +36,7 @@ class Inventory
   end
 
   def uber_host
-    stats = { name: "aggregated instance host",
+    stats = { name: 'aggregated instance host',
               memory_bytes: 0 }
     stats[:cpus] = [ { cores: 0,
                      speed_hz: 0 } ]
@@ -50,7 +50,7 @@ class Inventory
 
   def uber_volume
     stats = Hash.new{|h,k| h[k]=0 }
-    stats[:name] = "aggregated instance volume"
+    stats[:name] = 'aggregated instance volume'
     volumes.each do |volume|
       stats[:storage_bytes] += volume.bytes
       stats[:speed_bits_per_second] += PropertyHelper.default_disk_io.to_i
@@ -59,11 +59,22 @@ class Inventory
     stats
   end
 
-  def networks_with_defaults
-    # currently, WAN will always be missing, so we'll always just cram it in
-    wan_network = Nic.new(name: "default_WAN", custom_id: "default_WAN", state: "active", kind: 'WAN')
-    (networks | [wan_network]).map(&:infrastructure_json)
+  def uber_network
+    stats = Hash.new{|h,k| h[k]=0 }
+    stats[:name] = 'aggregated instance network'
+    stats[:state] = 'connected'
+    stats[:status] = 'Active'
+    stats[:kind] = 'LAN'
+    hosts.each {|host|
+      stats[:speed_bits_per_second] += host.nics.first.speed_bits_per_second unless host.nics.empty? }
+    stats
   end
+
+  # def networks_with_defaults
+  #   # currently, WAN will always be missing, so we'll always just cram it in
+  #   wan_network = Nic.new(name: 'default_WAN', custom_id: 'default_WAN', state: 'active', kind: 'WAN')
+  #   ([uber_network] | networks | [wan_network]).map(&:infrastructure_json)
+  # end
 
 
   def total_cost

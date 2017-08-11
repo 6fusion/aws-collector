@@ -7,11 +7,23 @@ class Nic
   field :name, type: String
   field :state, type: String
   field :status, type: String, default: :Active
-  field :kind, type: String, default: "LAN"
+  field :kind, type: String, default: 'LAN'
+  field :speed_bits_per_second, type: Integer, default: lambda{ kind.eql?('WAN') ?
+                                                                  PropertyHelper.default_wan_io.to_i :
+                                                                  PropertyHelper.default_lan_io.to_i }
+
 
   field :tags, type: Array, default: []
 
   validates :custom_id, presence: true
+
+  def self.default_wan_hash
+    { name: 'default_WAN',
+      custom_id: 'default_WAN',
+      state: 'active',
+      kind: 'WAN',
+      speed_bits_per_second: PropertyHelper.default_wan_io.to_i }
+  end
 
   def infrastructure_json
     {
@@ -21,7 +33,7 @@ class Nic
       status: status,
       tags: tags,
       kind: kind,
-      speed_bits_per_second: kind.eql?('LAN') ? PropertyHelper.default_lan_io.to_i : PropertyHelper.default_wan_io.to_i
+      speed_bits_per_second: speed_bits_per_second
     }
   end
 
@@ -30,7 +42,8 @@ class Nic
       custom_id: custom_id,
       name: name,
       status: status,
-      kind: kind
+      kind: kind,
+      speed_bits_per_second: speed_bits_per_second
     }
   end
 
