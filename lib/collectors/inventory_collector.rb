@@ -185,6 +185,7 @@ class InventoryCollector
   end
 
   def instance_nic_model(instance)
+    p instance
     Nic.new(
       custom_id: "united_network_of_instance_#{instance.instance_id}",
       name: :united_network,
