@@ -1,7 +1,7 @@
 class MetricsSender
+  include KubernetesHelper
 
   def send
-
     Sample.persisted_start_times.each do |start_time|
       $logger.info "Submitting samples for #{start_time}"
       Sample.group_by_start_time(start_time).each do |samples_by_date|
@@ -21,6 +21,9 @@ class MetricsSender
             end
 
             Sample.where( id: { "$in": samples.map(&:id) } ).delete_all
+            update_last_sent_time
+            # delete corresponding inventory as we go?
+            # most likely: this needs a queue
           end
 
         end
@@ -38,18 +41,8 @@ class MetricsSender
   def update_last_sent_time
     end_time = last_sample_time
     $logger.info "Updating last sent metrics time to #{end_time}"
-#FIXME kub secret
-    File.write('/tmp/last_sent_metrics_time', end_time)
 
-    # inventory = synced_inventory
-    # return unless inventory
-
-    # inventory.hosts.update_all(last_sent_metrics_time: end_time)
-    # response = InventoryConnector.new.send_infrastructure(inventory)
-
-    # if response.code != 200
-    #   $logger.error "Error occurred during updating last sent time for infrastructure id '#{inventory.custom_id}'"
-    # end
+    KubernetesHelper::save_value("lastSampleTime", end_time)
   end
 
   def last_sample_time

@@ -2,6 +2,7 @@ require 'aws_helper'
 
 class MetricCollector
   include AWSHelper
+  include KubernetesHelper
 
   def initialize
     @options = {
@@ -37,12 +38,9 @@ class MetricCollector
 
 #  private
   def set_time_options(inventory)
-    interval = CONFIG.scheduler.collect_samples.interval.to_i.minutes
+    interval =  PropertyHelper.collection_interval.minutes
 
-    start_time = inventory.last_collected_metrics_time
-    # FIXME
-    start_time ||= last_sent_metrics_time(inventory)
-    start_time ||= Time.now - interval
+    start_time = (inventory.last_collected_metrics_time || last_sent_metrics_time(inventory) || (Time.now - interval))
     end_time = start_time + interval
 
     $logger.info "Collecting samples for period #{start_time} -> #{end_time}"
@@ -52,17 +50,8 @@ class MetricCollector
   end
 
   def last_sent_metrics_time(inventory)
-    # meter_response = MeterHttpClient.new.get_infrastructure(inventory.custom_id)
-    # time = meter_response['hosts']&.first&.send(:[], 'last_sent_metrics_time')
-    begin
-      time = File.read('/tmp/last_sent_metrics_time')
-      Time.parse(time)
-    rescue Errno::ENOENT => e
-      nil
-    rescue => e
-      $logger.warn "Not able to determine last sent metrics time: #{e.message}"
-      nil
-    end
+    time = KubernetesHelper::get_value('lastSampleTime')
+    time ? Time.parse(time) : nil
   end
 
   def collect_samples(host)
