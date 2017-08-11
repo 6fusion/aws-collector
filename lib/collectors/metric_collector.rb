@@ -171,7 +171,7 @@ class MetricCollector
 
       Sample.new(
           start_time: time,
-          end_time: time + 5.minutes,
+          end_time: time + PropertyHelper.sample_granularity.minutes,
           machine_sample: machine_sample,
           nic_sample: nic_sample,
           disk_samples: disk_sample
