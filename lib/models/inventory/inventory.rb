@@ -64,12 +64,9 @@ class Inventory
     stats[:name] = 'aggregated instance network'
     stats[:state] += 'connected'
     stats[:status] += 'Active'
-    stats[:kine] += 'LAN'
-
+    stats[:kind] += 'LAN'
     hosts.each {|host|
-      host.nics.each {|nic|
-        stats[:speed_bits_per_second] += PropertyHelper.default_disk_io.to_i }}
-
+      stats[:speed_bits_per_second] += host.nics.first.speed_bits_per_second unless host.nics.empty? }
     stats
   end
 
