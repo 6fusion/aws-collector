@@ -1,3 +1,5 @@
+require 'kubernetes_helper'
+
 class MetricsSender
   include KubernetesHelper
 

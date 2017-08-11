@@ -1,4 +1,5 @@
 require 'aws_helper'
+require 'kubernetes_helper'
 
 class MetricCollector
   include AWSHelper
