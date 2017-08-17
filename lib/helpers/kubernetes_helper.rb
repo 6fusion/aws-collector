@@ -16,7 +16,7 @@ module KubernetesHelper
   def self.get_value(key)
     begin
       config_map = self.get_config_map
-      config_map.data[key]
+      config_map.data ? config_map.data[key] : nil
     rescue KubeException => e
       if e.error_code == 404
         nil
