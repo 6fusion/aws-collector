@@ -2,7 +2,7 @@ module KubernetesHelper
 
   def self.save_value(key, value)
     begin
-      config_map = get_config_map
+      config_map = self.get_config_map
       config_map.data[key] = value
       $kube_client.update_config_map config_map
       value
@@ -15,7 +15,7 @@ module KubernetesHelper
 
   def self.get_value(key)
     begin
-      config_map = get_config_map
+      config_map = self.get_config_map
       config_map.data[key]
     rescue KubeException => e
       if e.error_code == 404
