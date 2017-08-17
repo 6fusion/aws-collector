@@ -4,11 +4,11 @@ module KubernetesHelper
     begin
       config_map = self.get_config_map
       config_map.data[key] = value
-      $kube_client.update_config_map config_map
+      client.update_config_map config_map
       value
     rescue KubeException => e
-      Rails.logger.error { e }
-      Rails.logger.debug { e.backtrace[0..15].join("\n") }
+      $logger.error { e }
+      $logger.debug { e.backtrace[0..15].join("\n") }
       raise e
     end
   end
@@ -21,8 +21,8 @@ module KubernetesHelper
       if e.error_code == 404
         nil
       else
-        Rails.logger.error { e }
-        Rails.logger.debug { e.backtrace[0..15].join("\n") }
+        $logger.error { e }
+        $logger.debug { e.backtrace[0..15].join("\n") }
         raise e
       end
     end
@@ -31,14 +31,15 @@ module KubernetesHelper
   private
   def self.get_config_map
     begin
-      $kubernetes_client.get_config_map('aws-collector-configmap', namespace)
+      client.get_config_map('aws-collector', namespace)
     rescue KubeException => e
       Rails.logger.debug { e.backtrace[0..15].join("\n") } unless e.error_code == 404
       config_map = Kubeclient::ConfigMap.new
-      config_map.metadata = { name: name,
+      config_map.metadata = { name: 'aws-collector',
                               namespace: namespace }
       config_map.data = {}
       $kubernetes_client.create_config_map config_map
+      client.get_config_map('aws-collector', namespace)
     end
   end
 

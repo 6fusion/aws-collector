@@ -15,6 +15,7 @@ class Scheduler
 
     def @scheduler.on_error(job, error)
       $logger.error "Job [#{job.id}] failed with error [#{error}]. Going to perform #{RETRY_COUNT} retries."
+      $logger.debug error.backtrace[0..15].join("\n")
 
       retry_count = 0
       begin
