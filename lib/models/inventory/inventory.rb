@@ -66,7 +66,10 @@ class Inventory
     stats[:status] = 'Active'
     stats[:kind] = 'LAN'
     hosts.each {|host|
-      stats[:speed_bits_per_second] += host.nics.first.speed_bits_per_second unless host.nics.empty? }
+      stats[:speed_bits_per_second] += host.nics
+                                         .reject{|n| n.name.eql?('united_network')}
+                                         .first
+                                         .speed_bits_per_second unless host.nics.empty? }
     stats
   end
 
