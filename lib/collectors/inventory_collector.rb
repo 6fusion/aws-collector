@@ -79,7 +79,7 @@ class InventoryCollector
     disks = instance.block_device_mappings.map{|device| host_disk_model(device) }
     disks << instance_disk_model(instance) if instance_disk_model(instance)
     nics = instance.network_interfaces.map{|network| nic_model(hardware, network) }
-#    nics << instance_nic_model(instance)
+    nics << instance_nic_model(instance)
 
     device_mappings = Hash[*instance.block_device_mappings.map do |device|
       [device.device_name, device.ebs.volume_id]
@@ -182,15 +182,15 @@ class InventoryCollector
     )
   end
 
-#   def instance_nic_model(instance)
-#     p instance
-#     Nic.new(
-#       custom_id: "united_network_of_instance_#{instance.instance_id}",
-#       name: :united_network,
-#       state: :available,
-# #      speed_bits_per_second: infer_lan_bandwidth(instance.network)
-#     )
-#   end
+  # rethink this - currently sample data is posted under this faked nic
+  def instance_nic_model(instance)
+    Nic.new(
+      custom_id: "united_network_of_instance_#{instance.instance_id}",
+      name: :united_network,
+      state: :available,
+#      speed_bits_per_second: infer_lan_bandwidth(instance.network)
+    )
+  end
 
   def vpcs
     vpcs = []
