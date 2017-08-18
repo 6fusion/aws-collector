@@ -38,7 +38,7 @@ module KubernetesHelper
       config_map.metadata = { name: 'aws-collector',
                               namespace: namespace }
       config_map.data = {}
-      $kubernetes_client.create_config_map config_map
+      client.create_config_map config_map
       client.get_config_map('aws-collector', namespace)
     end
   end

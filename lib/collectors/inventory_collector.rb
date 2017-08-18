@@ -187,7 +187,7 @@ class InventoryCollector
     Nic.new(
       custom_id: "united_network_of_instance_#{instance.instance_id}",
       name: :united_network,
-      state: :available,
+      state: :available
 #      speed_bits_per_second: infer_lan_bandwidth(instance.network)
     )
   end
