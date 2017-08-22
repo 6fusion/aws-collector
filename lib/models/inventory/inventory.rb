@@ -66,6 +66,7 @@ class Inventory
     stats[:status] = 'Active'
     stats[:kind] = 'LAN'
     hosts.each {|host|
+      $logger.debug "Processing nics for #{host.name}: #{host.nics.inspect}"
       stats[:speed_bits_per_second] += host.nics
                                          .reject{|n| n.name.eql?('united_network')}
                                          .first
