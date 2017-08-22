@@ -65,12 +65,17 @@ class Inventory
     stats[:state] = 'connected'
     stats[:status] = 'Active'
     stats[:kind] = 'LAN'
-    hosts.each {|host|
-      $logger.debug "Processing nics for #{host.name}: #{host.nics.inspect}"
-      stats[:speed_bits_per_second] += host.nics
-                                         .reject{|n| n.name.eql?('united_network')}
-                                         .first
-                                         .speed_bits_per_second unless host.nics.empty? }
+    hosts.each do |host|
+      begin
+        stats[:speed_bits_per_second] += host.nics
+                                           .reject{|n| n.name.eql?('united_network')}
+                                           .first
+                                           .speed_bits_per_second unless host.nics.empty?
+      rescue => e
+        $logger.error "Could not process nics for #{host.name}: #{host.nics.inspect}"
+        $logger.debug e.backtrace.join("\n")
+      end
+    end
     stats
   end
 
